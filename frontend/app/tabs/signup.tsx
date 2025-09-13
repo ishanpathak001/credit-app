@@ -1,17 +1,35 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, } from 'expo-router';
 import React, { useState } from 'react';
-import { TouchableWithoutFeedback, Keyboard, Text, TouchableOpacity, View } from 'react-native';
+import { TouchableWithoutFeedback, Keyboard, Text, TouchableOpacity, View, GestureResponderEvent } from 'react-native';
 import { useNavigation } from "@react-navigation/native";
 import { TextInput } from 'react-native-paper'
 import { SafeAreaView } from 'react-native-safe-area-context';
+import axios from 'axios';
+import API from '../api';
 
 const Signup = () => {
 
     const navigation = useNavigation();
-    const [name, setName] = useState("");
-    const [password, setPassword] = useState('');
+    const [fullName, setfullName] = useState<string>('');
+    const [phoneNumber, setphoneNumber] = useState<string>('');
+    const [password, setPassword] = useState<string>('');
     const [showPassword, setShowPassword] = useState(false);
+    const[message, setMessage] = useState<string>('');
+
+    const handleSignup = async (e: GestureResponderEvent) => {
+        e.preventDefault();
+        try {
+            const res = await API.post('/signup', {
+                full_namme: fullName,
+                phone_number: phoneNumber,
+                password
+            });
+            setMessage('User ${res.data.user.full_name} created successfully!');
+        }catch (err: any) {
+            setMessage(err?.response?.data?.message || 'Signup failed!');
+        }
+    };
 
 
     return (
@@ -45,6 +63,8 @@ const Signup = () => {
                                 <TextInput
                                     keyboardType="default"
                                     label="Full Name"
+                                    value={fullName}
+                                    onChangeText={setfullName}
                                     activeUnderlineColor="black"
                                     underlineColor="black"
                                     className='p-5 text-m mb-4'
@@ -63,6 +83,8 @@ const Signup = () => {
                                 <TextInput
                                     keyboardType="phone-pad"
                                     label="Phone number"
+                                    value={phoneNumber}
+                                    onChangeText={setphoneNumber}
                                     activeUnderlineColor="black"
                                     underlineColor="black"
                                     className='p-5 text-m mb-4'
@@ -82,6 +104,7 @@ const Signup = () => {
                                     <TextInput
                                         label="New Password"
                                         mode='flat'
+                                        value={password}
                                         onChangeText={setPassword}
                                         secureTextEntry={!showPassword}
                                         activeUnderlineColor="black"
@@ -129,7 +152,7 @@ const Signup = () => {
                                         alignSelf: 'center',
                                         borderRadius: 32
                                     }}
-
+                                    onPress={handleSignup}
                                 >
                                     <Text className='text-center text-white text-2xl font-semibold'>
                                         Sign Up
