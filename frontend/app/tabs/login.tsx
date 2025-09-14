@@ -1,15 +1,53 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, Link } from 'expo-router';
+import { Stack, Link, router } from 'expo-router';
 import React, { useState } from 'react';
-import { TouchableWithoutFeedback, Keyboard, KeyboardAvoidingView, Platform, Text, TouchableOpacity, View, Pressable, } from 'react-native';
+import { TouchableWithoutFeedback, Keyboard, Text, TouchableOpacity, View } from 'react-native';
 import { TextInput } from 'react-native-paper'
 import { SafeAreaView } from 'react-native-safe-area-context';
+import API from '../api';
+import { GestureResponderEvent } from 'react-native';
 
-export default function Index() {
 
 
+
+const LoginScreen = ({ setIsLoggedIn }: { setIsLoggedIn: (value: boolean) => void }) =>  {
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [usernameError, setUsernameError] = useState<string>('');
+  const [passwordError, setPasswordError] = useState<string>('');
+
+
+  const handleLogin = async (e: GestureResponderEvent) => {
+    e.preventDefault();
+    setUsernameError('');
+    setPasswordError('');
+    let valid = true;
+    if (!phoneNumber) setUsernameError('Phone number is required'), valid = false;
+    if (!password) setPasswordError('Password is required'), valid = false;
+    if (!valid) return;
+
+    try {
+      const res = await API.post('/login', {
+        phone_number: phoneNumber,
+        password: password
+      });
+      if (res.data.success) {
+        setIsLoggedIn(true);
+      } else {
+        setPasswordError(res.data.message);
+      }
+    } catch (err: any) {
+      console.log("Login error: ", err);
+      if (err.response && err.response.data && err.response.data.message) {
+        setPasswordError(err.response.data.message);
+      } else {
+        setPasswordError("Login failed. Please try again.");
+      }
+    }
+  };
+
+
 
   return (
     <SafeAreaView className='flex-1 bg-white'>
@@ -35,6 +73,10 @@ export default function Index() {
             <TextInput
               keyboardType="phone-pad"
               label="Phone number"
+              value={phoneNumber}
+              onChangeText={(text) => {setPhoneNumber(text);
+                if (usernameError) setUsernameError('');
+              }}
               activeUnderlineColor="black"
               underlineColor="black"
               className='p-5 text-m mb-4'
@@ -47,12 +89,18 @@ export default function Index() {
 
             />
 
+            {/* Display error message if exists */}
+            {usernameError ? <Text className='text-left' style={{ color: 'red', marginTop: -48  }}>{usernameError}</Text> : null}
+
             {/* This TextInput is for entering a password */}
 
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <TextInput
                 label="Password"
-                onChangeText={setPassword}
+                value={password}
+                onChangeText={(text) => {(setPassword(text));
+                  if(passwordError) setPasswordError('');
+                }}
                 secureTextEntry={!showPassword}
                 activeUnderlineColor="black"
                 underlineColor="black"
@@ -64,6 +112,8 @@ export default function Index() {
                   borderColor: 'gray'
                 }}
               />
+
+
 
               {/* TouchableOpacity for showing/hiding password */}
               <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
@@ -80,6 +130,10 @@ export default function Index() {
               </TouchableOpacity>
 
             </View>
+
+            {/* Display error message if exists */}
+            {passwordError ? <Text className='text-left' style={{ color: 'red', marginTop: 0  }}>{passwordError}</Text> : null}
+
 
             {/* Forgot Password Text */}
             <View className='items-end  mt-8'>
@@ -104,6 +158,7 @@ export default function Index() {
                 alignSelf: 'center',
                 borderRadius: 32
               }}
+              onPress={handleLogin}
             >
 
               <Text className='text-center text-white text-2xl font-semibold'>
@@ -111,6 +166,7 @@ export default function Index() {
               </Text>
             </TouchableOpacity>
 
+            
 
             {/* Sign Up button */}
             <Text className='text-lg text-gray-500 mt-6 text-center' >
@@ -132,3 +188,5 @@ export default function Index() {
     </SafeAreaView>
   )
 }
+
+export default LoginScreen;
