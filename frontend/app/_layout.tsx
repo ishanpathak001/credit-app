@@ -1,22 +1,49 @@
 import { Stack } from "expo-router";
 import "./globals.css";
-import { useState } from "react";
-import LoginScreen from "./tabs/login";
+import { useEffect, useState, useContext } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { AuthContext, AuthProvider } from "../src/context/AuthContext";  
 
-const [isLoggedIn, setIsLoggedIn] = useState(false);
-export default function Layout() {
+export default function LayoutWrapper() {
+  return(
+     <AuthProvider>
+      <Layout />
+    </AuthProvider>
+  );
+}
 
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  if (!isLoggedIn) {
-    // Render the login screen directly, not inside a stack
-    return <LoginScreen setIsLoggedIn={setIsLoggedIn} />;
+ function Layout() {
+
+  // const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  
+  const { isLoggedIn } = useContext(AuthContext);
+  console.log("Current login state:", isLoggedIn);
+
+  //prevent rendering while auth state is loading
+  if (isLoggedIn ===null){
+    return <></>;
   }
 
-  // Only render the stack when logged in
   return (
     <Stack>
-      <Stack.Screen name="tabs/home" options={{ headerShown: false }} />
+      <Stack.Protected guard={isLoggedIn}>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      </Stack.Protected>
+
+       <Stack.Protected guard={!isLoggedIn}>
+        <Stack.Screen name="login" options={{ headerShown: false }} />
+        <Stack.Screen name="signup" options={{ headerShown: false }} />
+      </Stack.Protected>      
     </Stack>
   );
+
+
+  //  return (
+  //   <Stack>
+     
+  //       <Stack.Screen name="tabs/login" options={{ headerShown: false }} />
+        
+  //   </Stack>
+  // );
 }

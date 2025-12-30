@@ -1,39 +1,52 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Stack, Link, router } from 'expo-router';
-import React, { useState } from 'react';
+import { Stack, Link, useRouter } from 'expo-router';
+import React, { useContext, useState } from 'react';
 import { TouchableWithoutFeedback, Keyboard, Text, TouchableOpacity, View } from 'react-native';
 import { TextInput } from 'react-native-paper'
 import { SafeAreaView } from 'react-native-safe-area-context';
-import API from '../api';
+import API from '../src/api/api';
 import { GestureResponderEvent } from 'react-native';
+import { AuthContext } from '../src/context/AuthContext';
 
 
 
 
 const LoginScreen = ({ setIsLoggedIn }: { setIsLoggedIn: (value: boolean) => void }) =>  {
+
+  const {login} = useContext(AuthContext);
+
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [usernameError, setUsernameError] = useState<string>('');
   const [passwordError, setPasswordError] = useState<string>('');
 
+  const router = useRouter();
+  
 
   const handleLogin = async (e: GestureResponderEvent) => {
     e.preventDefault();
     setUsernameError('');
     setPasswordError('');
-    let valid = true;
-    if (!phoneNumber) setUsernameError('Phone number is required'), valid = false;
-    if (!password) setPasswordError('Password is required'), valid = false;
-    if (!valid) return;
+    
+    if (!phoneNumber) {setUsernameError('Phone number is required'); return; }
+    if (!password){ setPasswordError('Password is required'); return; }
+    
 
     try {
-      const res = await API.post('/login', {
+      const res = await API.post("/users/login", {
         phone_number: phoneNumber,
         password: password
       });
-      if (res.data.success) {
-        setIsLoggedIn(true);
+      console.log("Response from backend:", res.data);
+      if (res.data.status) {
+        // await AsyncStorage.setItem("isLoggenIn", "true");
+        //  //force navigation
+        
+        await login(res.data.user);
+        router.replace("./(tabs)/home");
+        
+        
       } else {
         setPasswordError(res.data.message);
       }
@@ -137,7 +150,7 @@ const LoginScreen = ({ setIsLoggedIn }: { setIsLoggedIn: (value: boolean) => voi
 
             {/* Forgot Password Text */}
             <View className='items-end  mt-8'>
-              <Link href="/tabs/pwdforgot" className='font-semibold '>
+              <Link href="/pwdforgot" className='font-semibold '>
                 Forgot Password?
               </Link>
 
@@ -172,7 +185,7 @@ const LoginScreen = ({ setIsLoggedIn }: { setIsLoggedIn: (value: boolean) => voi
             <Text className='text-lg text-gray-500 mt-6 text-center' >
               Don't have an account?{' '}
 
-              <Link href="/tabs/signup" className='text-black font-semibold' >
+              <Link href="/signup" className='text-black font-semibold' >
 
                 Sign Up
 

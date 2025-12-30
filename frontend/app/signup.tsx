@@ -2,10 +2,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { Stack, } from 'expo-router';
 import React, { useState } from 'react';
 import { TouchableWithoutFeedback, Keyboard, Text, TouchableOpacity, View, GestureResponderEvent, Alert } from 'react-native';
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation} from "@react-navigation/native";
 import { TextInput } from 'react-native-paper'
 import { SafeAreaView } from 'react-native-safe-area-context';
-import API from '../api';
+import API from '../src/api/api';
 
 const SignupScreen = () => {
 
@@ -31,12 +31,13 @@ const SignupScreen = () => {
         if (!valid) return;
 
         try {
-            const res = await API.post('/signup', {
+            const res = await API.post('/users/signup', {
                 full_name: fullName,
                 phone_number: phoneNumber,
                 password: password
             });
             if (res.data.success) {
+                console.log("Successfully signed up");
                 Alert.alert(
                     "Success",
                     res.data.message,

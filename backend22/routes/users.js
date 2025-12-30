@@ -29,8 +29,8 @@ router.post('/signup', async (req, res) => {
 
     // Insert user
     const result = await pool.query(
-      'INSERT INTO users (phone_number, full_name, password) VALUES ($1, $2, $3) RETURNING id, phone_number, full_name',
-      [phone_number, full_name, hashedPassword]
+      'INSERT INTO users ( full_name, phone_number, password_hash) VALUES ($1, $2, $3)',
+      [ full_name, phone_number, hashedPassword]
 
     );
 
@@ -59,8 +59,11 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid credentials' });
     }
 
-    // Compare password
-    const validPassword = await bcrypt.compare(password, user.rows[0].password);
+    // Hashing the given password
+    // const loginhashpwd = await bcrypt.hash(password, 10)
+
+    // Compare password   user.rows[0].password
+    const validPassword = await bcrypt.compare(password, user.rows[0].password_hash);
     if (!validPassword) {
       return res.status(400).json({ success: false, message: 'Invalid credentials' });
     }
