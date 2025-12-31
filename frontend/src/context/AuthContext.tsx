@@ -2,8 +2,9 @@ import { createContext, useState, ReactNode, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type UserType = {
+  id: number;
   full_name: string;
-  email?: string;
+  phone_number: string;
 };
 
 type AuthContextType = {
@@ -34,6 +35,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
     checkLogin();
   }, []);
+
+ 
+
+useEffect(() => {
+  if (isLoggedIn && user) {
+    console.log("Current logged-in user:", user);
+    // Example output:
+    // { id: 1, full_name: "Ishan Pathak", phone_number: "9800000000" }
+  }
+}, [isLoggedIn, user]);
+
 
   const login = async (userData: UserType) => {
     await AsyncStorage.setItem("isLoggedIn", "true");

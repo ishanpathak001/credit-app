@@ -4,6 +4,7 @@ const cors = require('cors');
 const userRoutes = require('./routes/users');
 const customersRouter = require("./routes/customers");
 
+
 dotenv.config();
 
 const app = express();
@@ -16,6 +17,7 @@ app.use(express.json());
 // Routes
 app.use('/api/users', userRoutes);
 app.use("/api/customers", customersRouter);
+
 
 app.get('/', (req, res) => {
   res.send('API is running...');

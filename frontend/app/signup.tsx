@@ -14,7 +14,6 @@ const SignupScreen = () => {
     const [phoneNumber, setphoneNumber] = useState<string>('');
     const [password, setPassword] = useState<string>('');
     const [showPassword, setShowPassword] = useState(false);
-    const [error, setError] = useState<string>('');
     const [fullnameError, setFullnameError] = useState<string>('');
     const [usernameError, setUsernameError] = useState<string>('');
     const [passwordError, setPasswordError] = useState<string>('');

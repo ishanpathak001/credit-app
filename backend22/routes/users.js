@@ -61,6 +61,12 @@ router.post('/login', async (req, res) => {
 
     // Hashing the given password
     // const loginhashpwd = await bcrypt.hash(password, 10)
+    //jwt token
+     const token = jwt.sign(
+      { id: user.id, full_name: user.full_name },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
 
     // Compare password   user.rows[0].password
     const validPassword = await bcrypt.compare(password, user.rows[0].password_hash);
