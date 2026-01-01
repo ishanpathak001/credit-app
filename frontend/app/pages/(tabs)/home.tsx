@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../../../src/context/AuthContext';
 import { on } from '../../../src/utils/eventBus';
 import { useTheme } from '../../../src/context/ThemeContext';
+import AddTransactionModal from '../../../src/components/AddTransactionModal';
 
 interface Transaction {
   description: string;
@@ -20,16 +21,29 @@ const Home = () => {
   const { user, token } = useContext(AuthContext);
   const [totalCredit, setTotalCredit] = useState<number>(0);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [modalVisible, setModalVisible] = useState(false);
   const { isDark } = useTheme();
 
-  useEffect(() =>  {
+  const cardStyle = {
+    backgroundColor: isDark ? '#1f2937' : '#fff',
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4,
+    marginBottom: 16,
+  };
+
+  useEffect(() => {
     const fetchData = async () => {
       try {
         const headers = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-        const totalRes = await API.get('/total-credit', headers);
+        const totalRes = await API.get('/transactions/total-credit', headers);
         setTotalCredit(totalRes.data.totalCredit);
 
-        const transRes = await API.get('/recent-transactions', headers);
+        const transRes = await API.get('/transactions/recent-transactions', headers);
         setTransactions(transRes.data.transactions);
       } catch (err) {
         console.log('Error fetching data:', err);
@@ -38,14 +52,18 @@ const Home = () => {
 
     fetchData();
     const unsub = on('transactions:added', () => fetchData());
-    return () => unsub();
+    return () =>void unsub();
   }, [token]);
 
   const renderTransaction = ({ item }: { item: Transaction }) => (
     <View
-      className={`flex-row justify-between p-4 rounded-xl mb-2 shadow`}
       style={{
-        backgroundColor: isDark ? '#1f2937' : '#fff',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        padding: 16,
+        borderRadius: 12,
+        marginBottom: 8,
+        backgroundColor: isDark ? '#111827' : '#f9fafb',
       }}
     >
       <View style={{ flex: 1, paddingRight: 8 }}>
@@ -71,19 +89,10 @@ const Home = () => {
   );
 
   return (
-    <SafeAreaView
-      style={{ flex: 1, backgroundColor: isDark ? '#111827' : '#f3f4f6' }}
-    >
+    <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? '#111827' : '#f3f4f6' }}>
       <View style={{ flex: 1, padding: 16 }}>
         {/* Greeting + profile button */}
-        <View
-          style={{
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: 16,
-          }}
-        >
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <Text style={{ fontSize: 24, fontWeight: '700', color: isDark ? '#fff' : '#111' }}>
             Hello, {user?.full_name ?? user?.name ?? 'User'}
           </Text>
@@ -93,61 +102,74 @@ const Home = () => {
         </View>
 
         {/* Total Credit Card */}
-        <View
-          style={{
-            backgroundColor: isDark ? '#1f2937' : '#fff',
-            borderRadius: 16,
-            padding: 24,
-            marginBottom: 16,
-          }}
-        >
+        <View style={cardStyle}>
           <Text style={{ color: isDark ? '#d1d5db' : '#6b7280', fontSize: 12 }}>Total Credit Given</Text>
           <Text style={{ fontSize: 28, fontWeight: '700', marginTop: 8, color: '#16a34a' }}>
             ₹{totalCredit.toLocaleString()}
           </Text>
         </View>
 
-        {/* Add Credit Button */}
-        <Pressable
-          style={{
-            backgroundColor: '#2563eb',
-            borderRadius: 12,
-            padding: 16,
-            marginBottom: 16,
-            alignItems: 'center',
-          }}
-          onPress={() => console.log('Navigate to Add Credit screen')}
-        >
-          <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>Add Credit</Text>
-        </Pressable>
+        {/* Recent Transactions Card */}
+        <View style={cardStyle}>
+          {/* Header + Buttons */}
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <Text style={{ fontSize: 16, fontWeight: '600', color: isDark ? '#fff' : '#111' }}>
+              Recent Transactions
+            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              {/* Add Transaction Button */}
+              <Pressable
+                style={{
+                  backgroundColor: '#2563eb',
+                  paddingVertical: 6,
+                  paddingHorizontal: 12,
+                  borderRadius: 8,
+                  marginRight: 8,
+                }}
+                onPress={() => setModalVisible(true)}
+              >
+                <Text style={{ color: '#fff', fontWeight: '600' }}>Add</Text>
+              </Pressable>
 
-        {/* Recent Transactions */}
-        <View
-          style={{
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: 8,
-          }}
-        >
-          <Text style={{ fontSize: 16, fontWeight: '600', color: isDark ? '#fff' : '#111' }}>
-            Recent Transactions
-          </Text>
-          <Pressable onPress={() => router.push('../transactions')}>
-            <Text style={{ color: '#2563eb', fontWeight: '600' }}>View all</Text>
-          </Pressable>
+              {/* View All Button */}
+              <Pressable onPress={() => router.push('../transactions')}>
+                <Text style={{ color: '#2563eb', fontWeight: '600' }}>View all</Text>
+              </Pressable>
+            </View>
+          </View>
+
+          {/* Transactions List */}
+          {transactions.length === 0 ? (
+            <Text style={{ color: isDark ? '#9ca3af' : '#6b7280' }}>No recent transactions.</Text>
+          ) : (
+            <FlatList
+              data={transactions.slice(0, 3)}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={renderTransaction}
+            />
+          )}
         </View>
-
-        {transactions.length === 0 ? (
-          <Text style={{ color: isDark ? '#9ca3af' : '#6b7280' }}>No recent transactions.</Text>
-        ) : (
-          <FlatList
-            data={transactions.slice(0, 3)}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={renderTransaction}
-          />
-        )}
       </View>
+
+      {/* Add Transaction Modal */}
+      <AddTransactionModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        onAdded={() => {
+          (async () => {
+            try {
+              const headers = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+              const totalRes = await API.get('/total-credit', headers);
+              setTotalCredit(totalRes.data.totalCredit);
+
+              const transRes = await API.get('/recent-transactions', headers);
+              setTransactions(transRes.data.transactions);
+            } catch (err) {
+              console.log('Error refreshing data:', err);
+            }
+          })();
+        }}
+      />
     </SafeAreaView>
   );
 };

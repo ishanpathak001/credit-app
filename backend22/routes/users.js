@@ -144,7 +144,7 @@ router.get('/most-credit-customer', authenticateToken, async (req, res) => {
     try {
       const q = `
        SELECT
-        cu.id,
+      cu.id,
         cu.full_name AS customer_name,
         cu.phone_number AS customer_phone,
         COALESCE(SUM(c.amount), 0) AS total_credit
