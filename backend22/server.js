@@ -3,6 +3,8 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const userRoutes = require('./routes/users');
 const customersRouter = require("./routes/customers");
+const statsRouter = require('./routes/stats');
+const creditsRouter = require('./routes/credits');
 
 
 dotenv.config();
@@ -17,6 +19,9 @@ app.use(express.json());
 // Routes
 app.use('/api/users', userRoutes);
 app.use("/api/customers", customersRouter);
+app.use('/api', statsRouter);
+app.use('/api/credits', creditsRouter);
+
 
 
 app.get('/', (req, res) => {

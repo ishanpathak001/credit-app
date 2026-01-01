@@ -1,68 +1,61 @@
-import { createContext, useState, ReactNode, useEffect } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { createContext, useState, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import API from '../api/api';
 
-type UserType = {
-  id: number;
-  full_name: string;
-  phone_number: string;
-};
+export const AuthContext = createContext<any>(null);
 
-type AuthContextType = {
-  isLoggedIn: boolean | null;
-  user: UserType | null;
-  login: (userData: UserType) => Promise<void>;
-  logout: () => Promise<void>;
-};
-
-export const AuthContext = createContext<AuthContextType>({
-  isLoggedIn: null,
-  user: null,
-  login: async () => {},
-  logout: async () => {}
-});
-
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+export const AuthProvider = ({ children }: any) => {
+  const [user, setUser] = useState<any | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
-  const [user, setUser] = useState<UserType | null>(null);
 
   useEffect(() => {
-    const checkLogin = async () => {
-      const storedLoggedIn = await AsyncStorage.getItem("isLoggedIn");
-      const storedUser = await AsyncStorage.getItem("user");
-
-      setIsLoggedIn(storedLoggedIn === "true");
-      if (storedUser) setUser(JSON.parse(storedUser));
+    const loadUser = async () => {
+      const storedToken = await AsyncStorage.getItem('token');
+      if (storedToken) {
+        setToken(storedToken);
+        try {
+          const res = await API.get('/users/profile', {
+            headers: { Authorization: `Bearer ${storedToken}` },
+          });
+          setUser(res.data);
+        } catch (err: any) {
+          console.log(err);
+          setUser(null);
+        }
+      }
+      setLoading(false);
+      setIsLoggedIn(!!storedToken);
     };
-    checkLogin();
+    loadUser();
   }, []);
 
- 
-
-useEffect(() => {
-  if (isLoggedIn && user) {
-    console.log("Current logged-in user:", user);
-    // Example output:
-    // { id: 1, full_name: "Ishan Pathak", phone_number: "9800000000" }
-  }
-}, [isLoggedIn, user]);
-
-
-  const login = async (userData: UserType) => {
-    await AsyncStorage.setItem("isLoggedIn", "true");
-    await AsyncStorage.setItem("user", JSON.stringify(userData));
-    setIsLoggedIn(true);
-    setUser(userData);
+  const login = async (phone: string, password: string) => {
+    try {
+      const res = await API.post('/users/login', { phone_number: phone, password });
+      console.log('AuthContext.login response:', res.data);
+      const token = res.data.token;
+      await AsyncStorage.setItem('token', token);
+      setToken(token);
+      setUser(res.data.user);
+      setIsLoggedIn(true);
+      return res.data;
+    } catch (err: any) {
+      console.log('AuthContext.login error:', err?.response?.data ?? err?.message ?? err);
+      throw err;
+    }
   };
 
   const logout = async () => {
-    await AsyncStorage.removeItem("isLoggedIn");
-    await AsyncStorage.removeItem("user");
-    setIsLoggedIn(false);
+    await AsyncStorage.removeItem('token');
+    setToken(null);
     setUser(null);
+    setIsLoggedIn(false);
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, user, login, logout }}>
+    <AuthContext.Provider value={{ user, token, login, logout, loading, isLoggedIn }}>
       {children}
     </AuthContext.Provider>
   );

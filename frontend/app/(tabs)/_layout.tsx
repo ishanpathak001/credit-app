@@ -49,6 +49,22 @@ export default function TabLayout() {
           ),
         }}
       />
+
+      {/* hide profile route from the tab bar but keep it accessible via navigation */}
+      <Tabs.Screen
+        name="profile"
+        options={{
+          tabBarButton: () => null,
+        }}
+      />
+
+      {/* hide dynamic customer id route from the tab bar */}
+      <Tabs.Screen
+        name="customer/[id]"
+        options={{
+          tabBarButton: () => null,
+        }}
+      />
     </Tabs>
   );
 }

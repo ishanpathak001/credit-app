@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, Link, useRouter } from 'expo-router';
 import React, { useContext, useState } from 'react';
-import { TouchableWithoutFeedback, Keyboard, Text, TouchableOpacity, View } from 'react-native';
+import { TouchableWithoutFeedback, Keyboard, Text, TouchableOpacity, View, Alert } from 'react-native';
 import { TextInput } from 'react-native-paper'
 import { SafeAreaView } from 'react-native-safe-area-context';
 import API from '../src/api/api';
@@ -13,10 +13,17 @@ import { AuthContext } from '../src/context/AuthContext';
 
 const LoginScreen = ({ setIsLoggedIn }: { setIsLoggedIn: (value: boolean) => void }) =>  {
 
-  const {login} = useContext(AuthContext);
+  const { login } = useContext(AuthContext);
+  const [password, setPassword] = useState('');
+  
+  
+  
+  
+  
+  
+  // const {login} = useContext(AuthContext);
 
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [usernameError, setUsernameError] = useState<string>('');
   const [passwordError, setPasswordError] = useState<string>('');
@@ -25,42 +32,53 @@ const LoginScreen = ({ setIsLoggedIn }: { setIsLoggedIn: (value: boolean) => voi
   
 
   const handleLogin = async (e: GestureResponderEvent) => {
-    e.preventDefault();
-    setUsernameError('');
-    setPasswordError('');
+  //   e.preventDefault();
+  //   setUsernameError('');
+  //   setPasswordError('');
     
-    if (!phoneNumber) {setUsernameError('Phone number is required'); return; }
-    if (!password){ setPasswordError('Password is required'); return; }
+  //   if (!phoneNumber) {setUsernameError('Phone number is required'); return; }
+  //   if (!password){ setPasswordError('Password is required'); return; }
     
+
+  //   try {
+  //     const res = await API.post("/users/login", {
+  //       phone_number: phoneNumber,
+  //       password: password
+  //     });
+  //     console.log("Response from backend:", res.data);
+  //     if (res.data.status) {
+  //       // await AsyncStorage.setItem("isLoggenIn", "true");
+  //       //  //force navigation
+        
+  //       await login(res.data.user);
+  //       router.replace("./(tabs)/home");
+        
+        
+  //     } else {
+  //       setPasswordError(res.data.message);
+  //     }
+  //   } catch (err: any) {
+  //     console.log("Login error: ", err);
+  //     if (err.response && err.response.data && err.response.data.message) {
+  //       setPasswordError(err.response.data.message);
+  //     } else {
+  //       setPasswordError("Login failed. Please try again.");
+  //     }
+  //   }
+  // };
 
     try {
-      const res = await API.post("/users/login", {
-        phone_number: phoneNumber,
-        password: password
-      });
-      console.log("Response from backend:", res.data);
-      if (res.data.status) {
-        // await AsyncStorage.setItem("isLoggenIn", "true");
-        //  //force navigation
-        
-        await login(res.data.user);
-        router.replace("./(tabs)/home");
-        
-        
-      } else {
-        setPasswordError(res.data.message);
-      }
+      await login(phoneNumber, password);
+      router.replace('/(tabs)/home');
     } catch (err: any) {
-      console.log("Login error: ", err);
-      if (err.response && err.response.data && err.response.data.message) {
-        setPasswordError(err.response.data.message);
-      } else {
-        setPasswordError("Login failed. Please try again.");
-      }
-    }
+       console.log("Login error: ", err);
+       if (err.response && err.response.data && err.response.data.message) {
+         setPasswordError(err.response.data.message);
+       } else {
+         setPasswordError("Login failed. Please try again.");
+       }
+     }
   };
-
-
 
   return (
     <SafeAreaView className='flex-1 bg-white'>
