@@ -25,7 +25,7 @@ router.post('/signup', async (req, res) => {
   try {
     const { full_name, phone_number, password } = req.body;
 
-   
+
 
 
     // Check if phone_number already exists
@@ -106,7 +106,7 @@ router.post('/login', async (req, res) => {
 router.get('/profile', authenticateToken, async (req, res) => {
   try {
     const userId = req.userId;
-    const userRes = await pool.query('SELECT id, full_name, phone_number FROM users WHERE id = $1', [userId]);
+    const userRes = await pool.query('SELECT id, full_name, phone_number,created_at FROM users WHERE id = $1', [userId]);
     if (userRes.rows.length === 0) return res.status(404).json({ message: 'User not found' });
     res.json(userRes.rows[0]);
   } catch (err) {
@@ -134,5 +134,53 @@ router.get('/total-credit', authenticateToken, async (req, res) => {
     res.status(500).send('Server Error');
   }
 });
+
+
+// GET /api/most-credit-customer -> customer with highest total credit
+router.get('/most-credit-customer', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    try {
+      const q = `
+       SELECT
+        cu.id,
+        cu.full_name AS customer_name,
+        cu.phone_number AS customer_phone,
+        COALESCE(SUM(c.amount), 0) AS total_credit
+        FROM customers cu
+        LEFT JOIN credits c ON cu.id = c.customer_id
+        WHERE cu.user_id = $1  -- replace $1 with the user's ID
+        GROUP BY cu.id, cu.full_name, cu.phone_number
+        ORDER BY total_credit DESC
+        LIMIT 1;
+      `;
+
+      const r = await pool.query(q, [userId]);
+
+      if (r.rows.length === 0) {
+        return res.json({ customer: null });
+      }
+
+      const row = r.rows[0];
+
+      return res.json({
+        customer: {
+          id: row.id,
+          name: row.customer_name,
+          phone: row.customer_phone,
+          totalCredit: parseFloat(row.total_credit),
+        },
+      });
+    } catch (err) {
+      console.warn('Could not query most-credit-customer:', err.message);
+      return res.json({ customer: null });
+    }
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
+
 
 module.exports = router;

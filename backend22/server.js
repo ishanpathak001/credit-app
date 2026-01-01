@@ -24,6 +24,8 @@ app.use('/api/credits', creditsRouter);
 
 
 
+
+
 app.get('/', (req, res) => {
   res.send('API is running...');
 });

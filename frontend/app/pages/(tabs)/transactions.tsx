@@ -1,8 +1,8 @@
 import { View, Text, FlatList, Pressable, TextInput } from 'react-native';
 import { useEffect, useState, useMemo } from 'react';
-import API from '../../src/api/api';
-import AddTransactionModal from '../../src/components/AddTransactionModal';
-import TransactionDetailModal from '../../src/components/TransactionDetailModal';
+import API from '../../../src/api/api';
+import AddTransactionModal from '../../../src/components/AddTransactionModal';
+import TransactionDetailModal from '../../../src/components/TransactionDetailModal';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface Transaction {

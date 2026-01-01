@@ -69,7 +69,7 @@ const LoginScreen = ({ setIsLoggedIn }: { setIsLoggedIn: (value: boolean) => voi
 
     try {
       await login(phoneNumber, password);
-      router.replace('/(tabs)/home');
+      router.replace('/pages/(tabs)/home');
     } catch (err: any) {
        console.log("Login error: ", err);
        if (err.response && err.response.data && err.response.data.message) {

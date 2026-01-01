@@ -1,13 +1,15 @@
 import { Stack } from "expo-router";
 import "./globals.css";
 import { useEffect, useState, useContext } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthContext, AuthProvider } from "../src/context/AuthContext";  
+import { ThemeProvider } from "../src/context/ThemeContext";
 
 export default function LayoutWrapper() {
   return(
      <AuthProvider>
-      <Layout />
+      <ThemeProvider>
+        <Layout />
+      </ThemeProvider>
     </AuthProvider>
   );
 }
@@ -28,7 +30,7 @@ export default function LayoutWrapper() {
   return (
     <Stack>
       <Stack.Protected guard={isLoggedIn}>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="pages/(tabs)" options={{ headerShown: false }} />
       </Stack.Protected>
 
        <Stack.Protected guard={!isLoggedIn}>
