@@ -9,10 +9,16 @@ router.post('/', authenticateToken, async (req, res) => {
     const userId = req.userId;
     const { amount, description, customer_id } = req.body;
 
-    if (amount == null) return res.status(400).json({ message: 'Amount is required' });
+    if (amount == null) {
+      return res.status(400).json({ message: 'Amount is required' });
+    }
 
     const result = await pool.query(
-      'INSERT INTO credits (user_id, amount, description, customer_id) VALUES ($1, $2, $3, $4) RETURNING *',
+      `
+      INSERT INTO credits (user_id, amount, description, customer_id, status)
+      VALUES ($1, $2, $3, $4, 'pending')
+      RETURNING *
+      `,
       [userId, amount, description || null, customer_id || null]
     );
 
@@ -23,20 +29,51 @@ router.post('/', authenticateToken, async (req, res) => {
   }
 });
 
+// ✅ GET /api/transactions/recent-transactions (last 5 for Home)
+router.get('/recent-transactions', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    const q = `
+      SELECT c.id, c.amount, c.description, c.created_at, c.status,
+             cu.full_name AS "customerName"
+      FROM credits c
+      LEFT JOIN customers cu ON c.customer_id = cu.id
+      WHERE c.user_id = $1
+      ORDER BY c.created_at DESC
+      LIMIT 5
+    `;
+
+    const result = await pool.query(q, [userId]);
+
+    const transactions = result.rows.map(row => ({
+      id: row.id,
+      amount: parseFloat(row.amount),
+      description: row.description,
+      customerName: row.customerName,
+      date: row.created_at,
+      status: row.status, // ✅ include status for frontend coloring
+    }));
+
+    res.json({ transactions });
+  } catch (err) {
+    console.error('Fetch recent transactions error:', err);
+    res.status(500).json({ message: 'Server error', details: err.message });
+  }
+});
+
 // ✅ GET /api/transactions/all-transactions?filter=15d|1m|all
 router.get('/all-transactions', authenticateToken, async (req, res) => {
   try {
     const userId = req.userId;
-    const filter = req.query.filter || '15d'; // default filter
+    const filter = req.query.filter || '15d';
 
-    // Build date condition based on filter
     let dateCondition = '';
     if (filter === '15d') dateCondition = `AND c.created_at >= NOW() - INTERVAL '15 days'`;
     else if (filter === '1m') dateCondition = `AND c.created_at >= NOW() - INTERVAL '1 month'`;
-    // 'all' → no dateCondition
 
     const q = `
-      SELECT c.id, c.amount, c.description, c.customer_id, c.created_at,
+      SELECT c.id, c.amount, c.description, c.customer_id, c.created_at, c.status,
              cu.full_name AS "customerName",
              cu.phone_number AS "customerPhone"
       FROM credits c
@@ -55,6 +92,7 @@ router.get('/all-transactions', authenticateToken, async (req, res) => {
       customerName: row.customerName,
       customerPhone: row.customerPhone,
       date: row.created_at,
+      status: row.status, // ✅ include status
     }));
 
     res.json({ transactions });
@@ -70,8 +108,8 @@ router.get('/total-credit', authenticateToken, async (req, res) => {
     const userId = req.userId;
 
     const result = await pool.query(
-      'SELECT COALESCE(SUM(amount),0) AS total_credit FROM credits WHERE user_id = $1',
-      [userId]
+      'SELECT COALESCE(SUM(amount), 0) AS total_credit FROM credits WHERE user_id = $1 AND status = $2',
+      [userId, 'pending'] // ✅ only sum pending credits
     );
 
     res.json({ totalCredit: parseFloat(result.rows[0].total_credit) });

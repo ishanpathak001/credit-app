@@ -22,8 +22,22 @@ const AddTransactionModal: FC<Props> = ({ visible, onClose, onAdded }) => {
   const [amountError, setAmountError] = useState<string>('');
   const [descriptionError, setDescriptionError] = useState<string>('');
 
+  // Reset form fields
+  const resetForm = () => {
+    setCustomerId(null);
+    setAmount('');
+    setDescription('');
+    setCustomerError('');
+    setAmountError('');
+    setDescriptionError('');
+  };
+
   useEffect(() => {
-    if (!visible) return;
+    if (!visible) {
+      resetForm(); // reset fields when modal is closed
+      return;
+    }
+
     const fetchCustomers = async () => {
       try {
         const headers = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
@@ -37,7 +51,6 @@ const AddTransactionModal: FC<Props> = ({ visible, onClose, onAdded }) => {
   }, [visible, token]);
 
   const submit = async () => {
-    // reset errors
     setCustomerError(''); setAmountError(''); setDescriptionError('');
     let hasError = false;
     if (!customerId) { setCustomerError('Customer is required'); hasError = true; }
@@ -50,10 +63,11 @@ const AddTransactionModal: FC<Props> = ({ visible, onClose, onAdded }) => {
       const headers = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
       const body: any = { amount: Number(amount), description, customer_id: customerId };
       const res = await API.post('/credits', body, headers);
+
       if (res.data?.success) {
-        // notify other parts of the app that a transaction was added
-        try { emit('transactions:added', res.data.transaction ?? res.data); } catch {}
+        emit('transactions:added', res.data.transaction ?? res.data); // notify other parts
         onAdded?.();
+        resetForm(); // reset after successful add
         onClose();
       } else {
         Alert.alert('Error', 'Failed to add transaction');
@@ -67,7 +81,7 @@ const AddTransactionModal: FC<Props> = ({ visible, onClose, onAdded }) => {
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={() => { resetForm(); onClose(); }}>
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
         <View style={{ width: '100%', backgroundColor: '#fff', borderRadius: 12, padding: 16 }}>
           <Text style={{ fontSize: 18, fontWeight: '700', marginBottom: 8 }}>Add Transaction</Text>
@@ -79,7 +93,7 @@ const AddTransactionModal: FC<Props> = ({ visible, onClose, onAdded }) => {
               <Text style={{ color: '#666' }}>{dropdownOpen ? '▲' : '▼'}</Text>
             </Pressable>
 
-            {dropdownOpen ? (
+            {dropdownOpen && (
               <ScrollView style={{ maxHeight: 200, borderTopWidth: 1, borderTopColor: '#eee' }}>
                 {customers.length === 0 ? (
                   <Text style={{ padding: 12, color: 'gray' }}>No customers</Text>
@@ -91,7 +105,7 @@ const AddTransactionModal: FC<Props> = ({ visible, onClose, onAdded }) => {
                   ))
                 )}
               </ScrollView>
-            ) : null}
+            )}
           </View>
           {customerError ? <Text style={{ color: 'red', marginBottom: 8 }}>{customerError}</Text> : null}
 
@@ -115,7 +129,7 @@ const AddTransactionModal: FC<Props> = ({ visible, onClose, onAdded }) => {
           {descriptionError ? <Text style={{ color: 'red', marginBottom: 8 }}>{descriptionError}</Text> : null}
 
           <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
-            <Pressable onPress={onClose} style={{ marginRight: 12 }}>
+            <Pressable onPress={() => { resetForm(); onClose(); }} style={{ marginRight: 12 }}>
               <Text style={{ color: '#666' }}>Cancel</Text>
             </Pressable>
             <Pressable onPress={submit}>

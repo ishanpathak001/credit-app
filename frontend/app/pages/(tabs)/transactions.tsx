@@ -14,14 +14,16 @@ import API from '../../../src/api/api';
 import { AuthContext } from '../../../src/context/AuthContext';
 import AddTransactionModal from '../../../src/components/AddTransactionModal';
 import TransactionDetailModal from '../../../src/components/TransactionDetailModal';
+import { on, off } from '../../../src/utils/eventBus';
 
 type Transaction = {
   id: number;
-  customerName: string;
+  customerName?: string;
   customerPhone?: string;
   amount: number;
   date: string;
   description?: string;
+  status?: 'pending' | 'settled';
 };
 
 const Transactions = () => {
@@ -53,6 +55,17 @@ const Transactions = () => {
 
   useEffect(() => {
     fetchTransactions();
+
+    // Listen for global "settled" events
+    const unsubscribe = on('transactions:settled', (updatedTransaction: Transaction) => {
+      setTransactions(prev =>
+        prev.map(t => (t.id === updatedTransaction.id ? updatedTransaction : t))
+      );
+    });
+
+    return () => {
+      unsubscribe && unsubscribe();
+    };
   }, [filter, token]);
 
   // Filter transactions based on search
@@ -65,31 +78,48 @@ const Transactions = () => {
     );
   });
 
-  // Render each transaction
-  const renderTransaction = ({ item }: { item: Transaction }) => (
-    <Pressable
-      onPress={() => {
-        setSelectedTransaction(item);
-        setDetailVisible(true);
-      }}
-    >
-      <View className="flex-row justify-between p-4 bg-white rounded-xl mb-2 shadow">
-        <View style={{ flex: 1, paddingRight: 8 }}>
-          <Text className="font-semibold text-gray-800">{item.customerName ?? 'Customer'}</Text>
-          {item.customerPhone && (
-            <Text className="text-gray-500 text-sm">{item.customerPhone}</Text>
-          )}
-          {item.description && (
-            <Text className="text-gray-500 text-sm">{item.description}</Text>
-          )}
+  const renderTransaction = ({ item }: { item: Transaction }) => {
+    const isSettled = item.status === 'settled';
+    const amountColor = isSettled ? '#16a34a' : '#d97706';
+
+    return (
+      <Pressable
+        onPress={() => {
+          setSelectedTransaction(item);
+          setDetailVisible(true);
+        }}
+      >
+        <View className="flex-row justify-between p-4 bg-white rounded-xl mb-2 shadow">
+          <View style={{ flex: 1, paddingRight: 8 }}>
+            <Text className="font-semibold text-gray-800">{item.customerName ?? 'Customer'}</Text>
+            {item.customerPhone && (
+              <Text className="text-gray-500 text-sm">{item.customerPhone}</Text>
+            )}
+            {item.description && (
+              <Text className="text-gray-500 text-sm">{item.description}</Text>
+            )}
+          </View>
+          <View className="items-end">
+            <Text className="font-bold" style={{ color: amountColor }}>
+              ₹{item.amount.toLocaleString()}
+            </Text>
+            <Text className="text-gray-500 text-xs">
+              {new Date(item.date).toLocaleString('en-IN', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </Text>
+            <Text className="text-xs font-semibold" style={{ color: amountColor }}>
+              {item.status?.toUpperCase() ?? 'PENDING'}
+            </Text>
+          </View>
         </View>
-        <View className="items-end">
-          <Text className="font-bold text-green-600">₹{item.amount.toLocaleString()}</Text>
-          <Text className="text-gray-500 text-xs">{new Date(item.date).toLocaleDateString()}</Text>
-        </View>
-      </View>
-    </Pressable>
-  );
+      </Pressable>
+    );
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-gray-100 p-4">
@@ -114,7 +144,7 @@ const Transactions = () => {
       </View>
 
       {/* Search & Add */}
-      <View className="flex-row  mb-4 space-x-2">
+      <View className="flex-row mb-4 space-x-2">
         <TextInput
           placeholder="Search by customer, phone, or description"
           value={search}

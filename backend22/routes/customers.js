@@ -25,7 +25,6 @@ router.get("/", authenticateToken, async (req, res) => {
 
 // ✅ ADD a new customer
 router.post("/", authenticateToken, async (req, res) => {
-   
   try {
     const userId = req.userId;
     const { full_name, phone_number } = req.body;
@@ -45,7 +44,7 @@ router.post("/", authenticateToken, async (req, res) => {
       [userId, full_name, phone_number]
     );
 
-    res.status(201).json({ success: true, message: "User registered successfully!!", user: result.rows[0] });
+    res.status(201).json({ success: true, message: "Customer added successfully!", user: result.rows[0] });
   } catch (err) {
     console.error(err.message);
     res.status(500).json({ error: "Server error" });
@@ -57,6 +56,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
   try {
     const userId = req.userId;
     const customerId = parseInt(req.params.id, 10);
+
     const result = await pool.query(
       'SELECT id, full_name, phone_number, created_at FROM customers WHERE id = $1 AND user_id = $2',
       [customerId, userId]
@@ -69,16 +69,34 @@ router.get('/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// GET transactions for a customer
+// ✅ GET transactions + total pending credit for a customer
 router.get('/:id/transactions', authenticateToken, async (req, res) => {
   try {
     const userId = req.userId;
     const customerId = parseInt(req.params.id, 10);
-    // Assume credits table has a customer_id column
-    const q = `SELECT id, amount, description, created_at FROM credits WHERE user_id = $1 AND customer_id = $2 ORDER BY created_at DESC`;
+
+    // Get all transactions
+    const q = `
+      SELECT id, amount, description, created_at, status
+      FROM credits
+      WHERE user_id = $1 AND customer_id = $2
+      ORDER BY created_at DESC
+    `;
     const r = await pool.query(q, [userId, customerId]);
-    const transactions = r.rows.map(row => ({ id: row.id, amount: parseFloat(row.amount), date: row.created_at, description: row.description }));
-    res.json({ transactions });
+    const transactions = r.rows.map(row => ({
+      id: row.id,
+      amount: parseFloat(row.amount),
+      date: row.created_at,
+      description: row.description,
+      status: row.status // expecting 'pending' or 'settled'
+    }));
+
+    // Calculate total pending credit
+    const total_pending = transactions
+      .filter(t => t.status === 'pending')
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    res.json({ transactions, total_pending });
   } catch (err) {
     console.error('Customer transactions error:', err);
     res.status(500).json({ error: 'Server error', details: err.message });
