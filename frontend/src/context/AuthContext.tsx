@@ -2,7 +2,7 @@ import React, { createContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import API from '../api/api';
 
-export const AuthContext = createContext<any>(null);
+export const AuthContext = createContext<any>(null); 
 
 export const AuthProvider = ({ children }: any) => {
   const [user, setUser] = useState<any | null>(null);
@@ -34,7 +34,6 @@ export const AuthProvider = ({ children }: any) => {
   const login = async (phone: string, password: string) => {
     try {
       const res = await API.post('/users/login', { phone_number: phone, password });
-      console.log('AuthContext.login response:', res.data);
       const token = res.data.token;
       await AsyncStorage.setItem('token', token);
       setToken(token);
@@ -55,7 +54,17 @@ export const AuthProvider = ({ children }: any) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, loading, isLoggedIn }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        setUser,        // ✅ expose setUser so other components can update user
+        token,
+        login,
+        logout,
+        loading,
+        isLoggedIn,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

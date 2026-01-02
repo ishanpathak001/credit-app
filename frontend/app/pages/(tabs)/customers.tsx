@@ -2,11 +2,11 @@ import { View, Text, TextInput, Pressable, FlatList, Modal, Alert } from "react-
 import { useEffect, useState, useContext } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import API from "../../../src/api/api";
-import { router } from 'expo-router';
 import { AuthContext } from "../../../src/context/AuthContext"; 
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTheme } from "../../../src/context/ThemeContext";
-import CustomerCardModal from "../../../src/components/CustomerCardModal"; // import the modal component
+import CustomerCardModal from "../../../src/components/CustomerCardModal";
+import { router } from "expo-router";
 
 type Customer = {
   id: number;
@@ -29,7 +29,7 @@ export default function Customers() {
   const { token } = useContext(AuthContext);
   const { isDark } = useTheme();
 
-  // Fetch customers
+  // Fetch all customers
   const fetchCustomers = async () => {
     try {
       const headers = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
@@ -42,12 +42,15 @@ export default function Customers() {
   };
 
   useEffect(() => { fetchCustomers(); }, [token]);
+
+  // Filter customers based on search input
   useEffect(() => {
     if (!search) return setFilteredCustomers(customers);
-    setFilteredCustomers(customers.filter(c =>
+    const filtered = customers.filter(c =>
       c.full_name.toLowerCase().includes(search.toLowerCase()) ||
       c.phone_number.includes(search)
-    ));
+    );
+    setFilteredCustomers(filtered);
   }, [search, customers]);
 
   const resetAddCustomerForm = () => {
@@ -69,7 +72,7 @@ export default function Customers() {
         Alert.alert("Success", res.data.message);
         resetAddCustomerForm();
         setModalVisible(false);
-        fetchCustomers(); // update list
+        fetchCustomers(); // refresh list
       } else {
         Alert.alert(res.data.message);
       }
@@ -79,13 +82,21 @@ export default function Customers() {
     }
   };
 
+  // Open modal for selected customer
   const openCustomerModal = (customer: Customer) => {
     setSelectedCustomer(customer);
     setCustomerModalVisible(true);
   };
 
+  // Callback after deleting customer from profile
+  const handleCustomerDeleted = () => {
+    setCustomerModalVisible(false);
+    fetchCustomers(); // refresh the list after deletion
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? '#111827' : '#f3f4f6', padding: 16 }}>
+      
       {/* Search + Add */}
       <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
         <TextInput
@@ -132,7 +143,7 @@ export default function Customers() {
         )}
       />
 
-      {/* Add Customer Modal (same as before) */}
+      {/* Add Customer Modal */}
       <Modal visible={modalVisible} transparent animationType="slide">
         <View style={{ flex:1, backgroundColor:'rgba(0,0,0,0.5)', justifyContent:'center', padding:16 }}>
           <View style={{ backgroundColor:isDark ? '#1f2937' : '#fff', padding:20, borderRadius:12 }}>
@@ -180,9 +191,10 @@ export default function Customers() {
           visible={customerModalVisible}
           customer={selectedCustomer}
           onClose={() => setCustomerModalVisible(false)}
-          onUpdated={fetchCustomers} // refresh list if updated
+          onUpdated={handleCustomerDeleted} // refresh after deletion
         />
       )}
+
     </SafeAreaView>
   );
 }

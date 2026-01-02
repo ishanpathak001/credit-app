@@ -4,7 +4,64 @@ const pool = require('../db');
 const { authenticateToken } = require('../middleware/auth');
 
 /* ======================================================
-   ✅ POST /api/credits - create a credit/transaction
+   ✅ GET /api/credits/limit
+   Fetch the current user's global credit limit
+   ====================================================== */
+router.get('/limit', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    const result = await pool.query(
+      `SELECT global_credit_limit FROM users WHERE id = $1`,
+      [userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    res.json({
+      success: true,
+      global_credit_limit: result.rows[0].global_credit_limit,
+    });
+  } catch (err) {
+    console.error('Fetch global credit limit error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+/* ======================================================
+   ✅ PUT /api/credits/limit
+   Update the current user's global credit limit
+   ====================================================== */
+router.put('/limit', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { global_credit_limit } = req.body;
+
+    if (global_credit_limit === undefined || isNaN(global_credit_limit) || global_credit_limit < 0) {
+      return res.status(400).json({ success: false, message: 'Invalid global_credit_limit' });
+    }
+
+    await pool.query(
+      `UPDATE users SET global_credit_limit = $1 WHERE id = $2`,
+      [global_credit_limit, userId]
+    );
+
+    res.json({
+      success: true,
+      message: 'Global credit limit updated',
+      global_credit_limit,
+    });
+  } catch (err) {
+    console.error('Update global credit limit error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+/* ======================================================
+   ✅ POST /api/credits
+   Create a credit/transaction
    ====================================================== */
 router.post('/', authenticateToken, async (req, res) => {
   try {
@@ -13,6 +70,17 @@ router.post('/', authenticateToken, async (req, res) => {
 
     if (amount == null) {
       return res.status(400).json({ message: 'Amount is required' });
+    }
+
+    // ✅ Optional: check if amount exceeds global/customer-specific limit
+    const limitRes = await pool.query(
+      `SELECT global_credit_limit FROM users WHERE id = $1`,
+      [userId]
+    );
+    const globalLimit = limitRes.rows[0]?.global_credit_limit ?? null;
+
+    if (globalLimit !== null && amount > globalLimit) {
+      return res.status(400).json({ message: `Amount exceeds global credit limit of ₹${globalLimit}` });
     }
 
     const result = await pool.query(
@@ -36,6 +104,7 @@ router.post('/', authenticateToken, async (req, res) => {
 
 /* ======================================================
    ✅ PATCH /api/credits/:id/settle
+   Settle a transaction
    ====================================================== */
 router.patch('/:id/settle', authenticateToken, async (req, res) => {
   try {
@@ -46,7 +115,6 @@ router.patch('/:id/settle', authenticateToken, async (req, res) => {
       return res.status(400).json({ message: 'Invalid transaction id' });
     }
 
-    // 1️⃣ Verify ownership & status
     const check = await pool.query(
       `
       SELECT id, status, amount
@@ -64,7 +132,6 @@ router.patch('/:id/settle', authenticateToken, async (req, res) => {
       return res.status(400).json({ message: 'Transaction already settled' });
     }
 
-    // 2️⃣ Mark as settled
     const update = await pool.query(
       `
       UPDATE credits

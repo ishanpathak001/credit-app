@@ -103,4 +103,31 @@ router.get('/:id/transactions', authenticateToken, async (req, res) => {
   }
 });
 
+// DELETE a customer and all their transactions
+router.delete('/:id', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.userId;
+    const customerId = parseInt(req.params.id, 10);
+
+    // Delete all transactions for this customer first
+    await pool.query('DELETE FROM credits WHERE user_id = $1 AND customer_id = $2', [userId, customerId]);
+
+    // Then delete the customer
+    const result = await pool.query(
+      'DELETE FROM customers WHERE id = $1 AND user_id = $2 RETURNING *',
+      [customerId, userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Customer not found' });
+    }
+
+    res.json({ success: true, message: 'Customer and all related transactions deleted' });
+  } catch (err) {
+    console.error('Delete customer error:', err);
+    res.status(500).json({ error: 'Server error', details: err.message });
+  }
+});
+
+
 module.exports = router;

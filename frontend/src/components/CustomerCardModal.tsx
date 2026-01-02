@@ -127,13 +127,14 @@ const CustomerCardModal: FC<Props> = ({ visible, customer, onClose, onUpdated })
           <View style={{ flexDirection: "row", justifyContent: "flex-end", marginTop: 12, gap: 12 }}>
             <Pressable
               onPress={() => {
-                onClose();
-                router.push({ pathname: "../customer", params: { phone: customer.phone_number } });
+                onClose(); // close the modal
+                router.push({ pathname: "../../pages/customer/[id]", params: { id: customer.id.toString() } });
               }}
               style={{ backgroundColor: "#2563eb", padding: 12, borderRadius: 12 }}
             >
               <Text style={{ color: "#fff", fontWeight: "700" }}>Open Profile</Text>
             </Pressable>
+
 
             <Pressable onPress={onClose} style={{ padding: 12 }}>
               <Text style={{ color: isDark ? "#d1d5db" : "#6b7280", fontWeight: "700" }}>Close</Text>

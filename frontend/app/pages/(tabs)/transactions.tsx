@@ -2,7 +2,6 @@ import React, { useEffect, useState, useContext } from 'react';
 import {
   View,
   Text,
-  FlatList,
   Pressable,
   TextInput,
   ScrollView,
@@ -14,7 +13,8 @@ import API from '../../../src/api/api';
 import { AuthContext } from '../../../src/context/AuthContext';
 import AddTransactionModal from '../../../src/components/AddTransactionModal';
 import TransactionDetailModal from '../../../src/components/TransactionDetailModal';
-import { on, off } from '../../../src/utils/eventBus';
+import { useGlobalSearchParams } from 'expo-router';
+import { on } from '../../../src/utils/eventBus';
 
 type Transaction = {
   id: number;
@@ -28,10 +28,12 @@ type Transaction = {
 
 const Transactions = () => {
   const { token } = useContext(AuthContext);
+  const params = useGlobalSearchParams();
+  const customerPhoneParam = params.phone as string | undefined;
 
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(customerPhoneParam || '');
   const [filter, setFilter] = useState<'15d' | '1m' | 'all'>('15d');
 
   const [addVisible, setAddVisible] = useState(false);
@@ -56,19 +58,34 @@ const Transactions = () => {
   useEffect(() => {
     fetchTransactions();
 
-    // Listen for global "settled" events
-    const unsubscribe = on('transactions:settled', (updatedTransaction: Transaction) => {
+    // Listen for global updates
+    const unsubSettled = on('transactions:settled', (updatedTransaction: Transaction) => {
       setTransactions(prev =>
         prev.map(t => (t.id === updatedTransaction.id ? updatedTransaction : t))
       );
     });
 
+    const unsubCustomerAdded = on('customers:added', () => {
+      fetchTransactions(); // refresh if a new customer is added
+    });
+
+    const unsubCustomerDeleted = on('customers:deleted', (deletedCustomerPhone: string) => {
+      setTransactions(prev => prev.filter(t => t.customerPhone !== deletedCustomerPhone));
+    });
+
+    const unsubTransactionAdded = on('transactions:added', (newTransaction: Transaction) => {
+      setTransactions(prev => [newTransaction, ...prev]);
+    });
+
     return () => {
-      unsubscribe && unsubscribe();
+      unsubSettled && unsubSettled();
+      unsubCustomerAdded && unsubCustomerAdded();
+      unsubCustomerDeleted && unsubCustomerDeleted();
+      unsubTransactionAdded && unsubTransactionAdded();
     };
   }, [filter, token]);
 
-  // Filter transactions based on search
+  // Filter transactions based on search input
   const filteredTransactions = transactions.filter(t => {
     const q = search.toLowerCase();
     return (
@@ -92,12 +109,8 @@ const Transactions = () => {
         <View className="flex-row justify-between p-4 bg-white rounded-xl mb-2 shadow">
           <View style={{ flex: 1, paddingRight: 8 }}>
             <Text className="font-semibold text-gray-800">{item.customerName ?? 'Customer'}</Text>
-            {item.customerPhone && (
-              <Text className="text-gray-500 text-sm">{item.customerPhone}</Text>
-            )}
-            {item.description && (
-              <Text className="text-gray-500 text-sm">{item.description}</Text>
-            )}
+            {item.customerPhone && <Text className="text-gray-500 text-sm">{item.customerPhone}</Text>}
+            {item.description && <Text className="text-gray-500 text-sm">{item.description}</Text>}
           </View>
           <View className="items-end">
             <Text className="font-bold" style={{ color: amountColor }}>
@@ -123,7 +136,6 @@ const Transactions = () => {
 
   return (
     <SafeAreaView className="flex-1 bg-gray-100 p-4">
-      {/* Heading */}
       <Text className="text-2xl font-bold text-gray-800 mb-4">All Transactions</Text>
 
       {/* Filters */}
@@ -131,9 +143,7 @@ const Transactions = () => {
         {['15d', '1m', 'all'].map(f => (
           <Pressable
             key={f}
-            className={`flex-1 p-3 rounded-xl items-center mr-2 ${
-              filter === f ? 'bg-blue-500' : 'bg-white'
-            }`}
+            className={`flex-1 p-3 rounded-xl items-center mr-2 ${filter === f ? 'bg-blue-500' : 'bg-white'}`}
             onPress={() => setFilter(f as '15d' | '1m' | 'all')}
           >
             <Text className={`${filter === f ? 'text-white' : 'text-gray-800'} font-semibold`}>

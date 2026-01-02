@@ -1,87 +1,165 @@
-import React, { useEffect, useState, useContext } from 'react';
-import { View, Text, ActivityIndicator, FlatList, TouchableOpacity } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams } from 'expo-router';
-import API from '../../../src/api/api';
-import { AuthContext } from '../../../src/context/AuthContext';
+import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert } from "react-native";
+import { useEffect, useState, useContext } from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { AuthContext } from "../../../src/context/AuthContext";
+import API from "../../../src/api/api";
+import { useTheme } from "../../../src/context/ThemeContext";
+import { router, Stack, useGlobalSearchParams } from "expo-router";
 
-type Transaction = { id: number; amount: number; description?: string; date: string };
+type Transaction = {
+  id: number;
+  amount: number;
+  description?: string;
+  date: string;
+  status?: "pending" | "settled";
+};
 
-export default function CustomerDetail() {
-  const { id } = useLocalSearchParams();
+type Customer = {
+  id: number;
+  full_name: string;
+  phone_number: string;
+};
+
+type Props = {
+  onUpdated?: () => void; // callback to refresh customers list/stats
+};
+
+export default function CustomerProfile({ onUpdated }: Props) {
   const { token } = useContext(AuthContext);
-  const [customer, setCustomer] = useState<any | null>(null);
+  const { isDark } = useTheme();
+  const params = useGlobalSearchParams();
+  const customerId = parseInt(params.id as string, 10);
+
+  const [customer, setCustomer] = useState<Customer | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
+  const [totalPending, setTotalPending] = useState(0);
+  const [totalCreditTaken, setTotalCreditTaken] = useState(0);
+
+  const fetchCustomer = async () => {
+    if (!customerId) return;
+    setLoading(true);
+    try {
+      const headers = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+      const resCustomer = await API.get(`/customers/${customerId}`, headers);
+      setCustomer(resCustomer.data);
+
+      const resTransactions = await API.get(`/customers/${customerId}/transactions`, headers);
+      const allTransactions: Transaction[] = resTransactions.data.transactions || [];
+      setTransactions(allTransactions);
+
+      const pending = allTransactions
+        .filter(t => t.status === "pending")
+        .reduce((acc, t) => acc + (t.amount ?? 0), 0);
+
+      const totalTaken = allTransactions
+        .reduce((acc, t) => acc + (t.amount ?? 0), 0);
+
+      setTotalPending(pending);
+      setTotalCreditTaken(totalTaken);
+    } catch (err: any) {
+      console.error("Customer profile fetch error:", err);
+      Alert.alert("Error", "Failed to fetch customer profile");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteCustomer = async () => {
+    Alert.alert(
+      "Confirm Deletion",
+      `Are you sure? All of ${customer?.full_name}'s transactions will also be deleted.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const headers = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+              const res = await API.delete(`/customers/${customerId}`, headers);
+              if (res.data.success) {
+                Alert.alert("Deleted", res.data.message);
+                if (onUpdated) onUpdated(); // refresh parent pages
+                router.back(); // go back to customers list
+              } else {
+                Alert.alert("Error", "Failed to delete customer");
+              }
+            } catch (err: any) {
+              console.error("Delete customer error:", err);
+              Alert.alert("Error", err?.response?.data?.message ?? "Failed to delete customer");
+            }
+          }
+        }
+      ]
+    );
+  };
 
   useEffect(() => {
-    const fetch = async () => {
-      setLoading(true);
-      try {
-        const headers = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-        const [cRes, tRes] = await Promise.all([
-          API.get(`/customers/${id}`, headers),
-          API.get(`/customers/${id}/transactions`, headers),
-        ]);
-        setCustomer(cRes.data);
-        const txs = tRes.data.transactions || [];
-        const sorted = txs.slice().sort((a: Transaction, b: Transaction) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        setTransactions(sorted);
-      } catch (err: any) {
-        console.log('Customer detail fetch error:', err?.response?.data ?? err?.message ?? err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetch();
-  }, [id, token]);
+    fetchCustomer();
+  }, [customerId, token]);
 
-  if (loading) return <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}><ActivityIndicator /></View>;
+  if (loading) {
+    return (
+      <SafeAreaView style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: isDark ? "#111827" : "#f3f4f6" }}>
+        <ActivityIndicator color={isDark ? "#fff" : "#111"} size="large" />
+      </SafeAreaView>
+    );
+  }
+
+  if (!customer) {
+    return (
+      <SafeAreaView style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: isDark ? "#111827" : "#f3f4f6" }}>
+        <Text style={{ color: isDark ? "#fff" : "#111" }}>Customer not found</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
-    <View>
-      <Stack.Screen
-        options={{
-          headerShown: true,
-          title: customer?.full_name ?? 'Customer',
-          headerTitleAlign: 'center',
-          headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()} style={{ marginLeft: 12 }}>
-              <Ionicons name="arrow-back" size={22} color="black" />
-            </TouchableOpacity>
-          ),
-          tabBarStyle: { display: 'none' },
-        }}
-      />
+    <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? "#111827" : "#f3f4f6" }}>
+      <Stack.Screen options={{ headerShown: false }} />
 
-      <View style={{ flex: 1, padding: 16 }}>
-      <View style={{ alignItems: 'center', marginBottom: 20 }}>
-        <Text style={{ fontSize: 22, fontWeight: '700' }}>{customer?.full_name}</Text>
-        <Text style={{ color: 'gray' }}>{customer?.phone_number}</Text>
-        {(customer?.created_at || customer?.createdAt) && (
-          <Text style={{ color: 'gray' }}>Added on {new Date(customer?.created_at || customer?.createdAt).toLocaleDateString()}</Text>
-        )}
+      {/* Header with Back Button */}
+      <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 1, borderBottomColor: isDark ? "#374151" : "#d1d5db" }}>
+        <Pressable onPress={() => router.back()} style={{ marginRight: 16 }}>
+          <Ionicons name="arrow-back" size={24} color={isDark ? "#fff" : "#111"} />
+        </Pressable>
+        <Text style={{ fontSize: 20, fontWeight: "700", color: isDark ? "#fff" : "#111" }}>{customer.full_name}</Text>
       </View>
 
-      <Text style={{ fontSize: 18, fontWeight: '600', marginBottom: 12 }}>Transactions</Text>
-      {transactions.length === 0 ? (
-        <Text style={{ color: 'gray' }}>No transactions for this customer.</Text>
-      ) : (
-        <FlatList
-          data={transactions}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <View style={{ backgroundColor: '#fff', padding: 12, borderRadius: 8, marginBottom: 8 }}>
-              <Text style={{ fontWeight: '600' }}>{item.description ?? 'Credit'}</Text>
-              <Text style={{ color: 'gray' }}>{new Date(item.date).toLocaleString()}</Text>
-              <Text style={{ marginTop: 6, fontWeight: '700' }}>₹{item.amount.toLocaleString()}</Text>
-            </View>
-          )}
-        />
-      )}
-      </View>
-    </View>
+      <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
+        {/* Customer Info */}
+        <View style={{ padding: 16, borderRadius: 12, backgroundColor: isDark ? "#1f2937" : "#fff" }}>
+          <Text style={{ fontWeight: "600", color: isDark ? "#d1d5db" : "#6b7280" }}>Phone Number</Text>
+          <Text style={{ fontSize: 16, fontWeight: "700", color: isDark ? "#fff" : "#111" }}>{customer.phone_number}</Text>
+        </View>
+
+        {/* Total Credit Stats */}
+        <View style={{ padding: 16, borderRadius: 12, backgroundColor: isDark ? "#1f2937" : "#fff", gap: 8 }}>
+          <Text style={{ fontWeight: "600", color: isDark ? "#d1d5db" : "#6b7280" }}>Total Pending Credit</Text>
+          <Text style={{ fontSize: 18, fontWeight: "700", color: isDark ? "#fff" : "#111" }}>₹{totalPending.toLocaleString()}</Text>
+
+          <Text style={{ fontWeight: "600", color: isDark ? "#d1d5db" : "#6b7280", marginTop: 8 }}>Total Credit Taken</Text>
+          <Text style={{ fontSize: 18, fontWeight: "700", color: isDark ? "#fff" : "#111" }}>₹{totalCreditTaken.toLocaleString()}</Text>
+        </View>
+
+        {/* View Transactions Button */}
+        <Pressable
+          onPress={() => router.push({ pathname: "../customers", params: { phone: customer.phone_number } })}
+          style={{ backgroundColor: "#2563eb", padding: 16, borderRadius: 12, alignItems: "center" }}
+        >
+          <Text style={{ color: "#fff", fontWeight: "700" }}>View Transactions</Text>
+        </Pressable>
+
+        {/* Delete Customer Button */}
+        <Pressable
+          onPress={deleteCustomer}
+          style={{ backgroundColor: "#ef4444", padding: 16, borderRadius: 12, alignItems: "center", marginTop: 12 }}
+        >
+          <Text style={{ color: "#fff", fontWeight: "700" }}>Delete Customer Data</Text>
+        </Pressable>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
