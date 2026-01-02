@@ -127,6 +127,11 @@ const Home = () => {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? '#111827' : '#f3f4f6' }}>
+      <FlatList
+      
+      ListHeaderComponent={
+        <>
+     
       <View style={{ flex: 1, padding: 16, marginBottom: 24 }}>
         {/* Greeting + profile button */}
         <View
@@ -207,6 +212,10 @@ const Home = () => {
 
       {/* Add Transaction Modal */}
       <AddTransactionModal visible={modalVisible} onClose={() => setModalVisible(false)} onAdded={fetchData} />
+      </>}
+      ListFooterComponent={<View style={{ height: 14 }} />} // padding at the bottom
+      contentContainerStyle={{ padding: 0}}
+      />
     </SafeAreaView>
   );
 };

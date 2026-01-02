@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import API from '../../../src/api/api';
 import { AuthContext } from '../../../src/context/AuthContext';
+import { useTheme } from '../../../src/context/ThemeContext';
 import AddTransactionModal from '../../../src/components/AddTransactionModal';
 import TransactionDetailModal from '../../../src/components/TransactionDetailModal';
 import { useGlobalSearchParams } from 'expo-router';
@@ -28,6 +29,7 @@ type Transaction = {
 
 const Transactions = () => {
   const { token } = useContext(AuthContext);
+  const { isDark } = useTheme();
   const params = useGlobalSearchParams();
   const customerPhoneParam = params.phone as string | undefined;
 
@@ -78,10 +80,10 @@ const Transactions = () => {
     });
 
     return () => {
-      unsubSettled && unsubSettled();
-      unsubCustomerAdded && unsubCustomerAdded();
-      unsubCustomerDeleted && unsubCustomerDeleted();
-      unsubTransactionAdded && unsubTransactionAdded();
+      unsubSettled?.();
+      unsubCustomerAdded?.();
+      unsubCustomerDeleted?.();
+      unsubTransactionAdded?.();
     };
   }, [filter, token]);
 
@@ -106,17 +108,39 @@ const Transactions = () => {
           setDetailVisible(true);
         }}
       >
-        <View className="flex-row justify-between p-4 bg-white rounded-xl mb-2 shadow">
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            padding: 16,
+            backgroundColor: isDark ? '#1f2937' : '#fff',
+            borderRadius: 16,
+            marginBottom: 12,
+            shadowColor: '#000',
+            shadowOpacity: 0.05,
+            shadowRadius: 4,
+          }}
+        >
           <View style={{ flex: 1, paddingRight: 8 }}>
-            <Text className="font-semibold text-gray-800">{item.customerName ?? 'Customer'}</Text>
-            {item.customerPhone && <Text className="text-gray-500 text-sm">{item.customerPhone}</Text>}
-            {item.description && <Text className="text-gray-500 text-sm">{item.description}</Text>}
+            <Text style={{ fontWeight: '600', color: isDark ? '#fff' : '#111' }}>
+              {item.customerName ?? 'Customer'}
+            </Text>
+            {item.customerPhone && (
+              <Text style={{ color: isDark ? '#9ca3af' : '#6b7280', fontSize: 12 }}>
+                {item.customerPhone}
+              </Text>
+            )}
+            {item.description && (
+              <Text style={{ color: isDark ? '#9ca3af' : '#6b7280', fontSize: 12 }}>
+                {item.description}
+              </Text>
+            )}
           </View>
-          <View className="items-end">
-            <Text className="font-bold" style={{ color: amountColor }}>
+          <View style={{ alignItems: 'flex-end' }}>
+            <Text style={{ fontWeight: '700', color: amountColor }}>
               रू{item.amount.toLocaleString()}
             </Text>
-            <Text className="text-gray-500 text-xs">
+            <Text style={{ color: isDark ? '#9ca3af' : '#6b7280', fontSize: 10 }}>
               {new Date(item.date).toLocaleString('en-IN', {
                 day: '2-digit',
                 month: 'short',
@@ -125,7 +149,7 @@ const Transactions = () => {
                 minute: '2-digit',
               })}
             </Text>
-            <Text className="text-xs font-semibold" style={{ color: amountColor }}>
+            <Text style={{ fontSize: 10, fontWeight: '600', color: amountColor }}>
               {item.status?.toUpperCase() ?? 'PENDING'}
             </Text>
           </View>
@@ -135,18 +159,33 @@ const Transactions = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-100 p-4">
-      <Text className="text-2xl font-bold text-gray-800 mb-4">All Transactions</Text>
+    <SafeAreaView
+      style={{
+        flex: 1,
+        backgroundColor: isDark ? '#111827' : '#f3f4f6',
+        padding: 16,
+      }}
+    >
+      <Text style={{ fontSize: 24, fontWeight: '700', marginBottom: 16, color: isDark ? '#fff' : '#111' }}>
+        All Transactions
+      </Text>
 
       {/* Filters */}
-      <View className="flex-row m-4 space-x-2">
+      <View style={{ flexDirection: 'row', marginBottom: 16 }}>
         {['15d', '1m', 'all'].map(f => (
           <Pressable
             key={f}
-            className={`flex-1 p-3 rounded-xl items-center mr-2 ${filter === f ? 'bg-blue-500' : 'bg-white'}`}
+            style={{
+              flex: 1,
+              padding: 12,
+              borderRadius: 12,
+              alignItems: 'center',
+              marginRight: 8,
+              backgroundColor: filter === f ? '#2563eb' : isDark ? '#1f2937' : '#fff',
+            }}
             onPress={() => setFilter(f as '15d' | '1m' | 'all')}
           >
-            <Text className={`${filter === f ? 'text-white' : 'text-gray-800'} font-semibold`}>
+            <Text style={{ fontWeight: '600', color: filter === f ? '#fff' : isDark ? '#fff' : '#111' }}>
               {f === '15d' ? 'Last 15 Days' : f === '1m' ? '1 Month' : 'All'}
             </Text>
           </Pressable>
@@ -154,26 +193,42 @@ const Transactions = () => {
       </View>
 
       {/* Search & Add */}
-      <View className="flex-row mb-4 space-x-2">
+      <View style={{ flexDirection: 'row', marginBottom: 16 }}>
         <TextInput
           placeholder="Search by customer, phone, or description"
+          placeholderTextColor={isDark ? '#9ca3af' : '#9ca3af'}
           value={search}
           onChangeText={setSearch}
-          className="flex-1 bg-white p-3 mr-2 rounded-xl border"
+          style={{
+            flex: 1,
+            padding: 12,
+            marginRight: 8,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: isDark ? '#374151' : '#d1d5db',
+            backgroundColor: isDark ? '#1f2937' : '#fff',
+            color: isDark ? '#fff' : '#111',
+          }}
         />
         <Pressable
           onPress={() => setAddVisible(true)}
-          className="bg-blue-500 p-3 rounded-xl items-center justify-center"
+          style={{
+            padding: 12,
+            borderRadius: 12,
+            backgroundColor: '#2563eb',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
         >
-          <Text className="text-white font-bold">Add</Text>
+          <Text style={{ color: '#fff', fontWeight: '700' }}>Add</Text>
         </Pressable>
       </View>
 
       {/* Transaction List */}
       {loading ? (
-        <ActivityIndicator size="large" color="#2563eb" className="mt-6" />
+        <ActivityIndicator size="large" color="#2563eb" style={{ marginTop: 32 }} />
       ) : filteredTransactions.length === 0 ? (
-        <Text className="text-gray-500 mt-6">No transactions found.</Text>
+        <Text style={{ color: isDark ? '#9ca3af' : '#6b7280', marginTop: 32 }}>No transactions found.</Text>
       ) : (
         <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
           {filteredTransactions.map(t => (
