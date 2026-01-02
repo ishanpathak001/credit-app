@@ -23,7 +23,7 @@ export default function ProfileScreen() {
     if (!token) return;
     setLoading(true);
     try {
-      // Fetch profile, total credit, and top customer in parallel
+      // fetch profile, total credit, and top customer concurrently
       const [profileRes, totalRes, topRes] = await Promise.all([
         API.get('/users/profile', { headers: { Authorization: `Bearer ${token}` } }),
         API.get('/users/total-credit', { headers: { Authorization: `Bearer ${token}` } }),
@@ -56,12 +56,12 @@ export default function ProfileScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? '#111827' : '#f3f4f6' }}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      {/* Back Arrow */}
+      {/* back arrow */}
       <TouchableOpacity onPress={() => navigation.goBack()} style={{ padding: 16 }}>
         <Ionicons name="arrow-back" size={24} color={isDark ? '#fff' : '#111'} />
       </TouchableOpacity>
 
-      {/* Profile Name */}
+      {/* profile name */}
       <View style={{ alignItems: 'center', marginBottom: 24 }}>
         <Text style={{ fontSize: 24, fontWeight: '700', color: isDark ? '#fff' : '#111' }}>
           {profile?.full_name ?? profile?.name ?? 'User'}
@@ -72,7 +72,7 @@ export default function ProfileScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20 }}>
-        {/* Total Credit */}
+        {/* total credit */}
         <View
           style={{
             backgroundColor: isDark ? '#1f2937' : '#fff',
@@ -87,7 +87,7 @@ export default function ProfileScreen() {
           </Text>
         </View>
 
-        {/* Account Info */}
+        {/* account info */}
         <View
           style={{
             backgroundColor: isDark ? '#1f2937' : '#fff',
@@ -109,7 +109,7 @@ export default function ProfileScreen() {
           )}
         </View>
 
-        {/* Top Customer */}
+        {/* top customer */}
         <View
           style={{
             backgroundColor: isDark ? '#1f2937' : '#fff',

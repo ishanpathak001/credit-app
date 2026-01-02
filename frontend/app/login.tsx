@@ -88,18 +88,18 @@ const LoginScreen = ({ setIsLoggedIn }: { setIsLoggedIn: (value: boolean) => voi
 
         <View className='flex-1 justify-center items-center p-4'>
 
-          {/* Removing header */}
+         
           <Stack.Screen options={{ headerShown: false }} />
 
           <View style={{ width: '85%' }} className='bottom-10' >
 
-            {/* Text 1 */}
+            
             <Text className='font-semibold  mb-20' style={{ fontSize: 48 }}>
               Log in
             </Text>
 
 
-            {/* This TextInput is for entering a phone number */}
+            {/* phone number textr input */}
 
             <TextInput
               keyboardType="phone-pad"
@@ -120,10 +120,10 @@ const LoginScreen = ({ setIsLoggedIn }: { setIsLoggedIn: (value: boolean) => voi
 
             />
 
-            {/* Display error message if exists */}
+            {/* display error message if exists */}
             {usernameError ? <Text className='text-left' style={{ color: 'red', marginTop: -48  }}>{usernameError}</Text> : null}
 
-            {/* This TextInput is for entering a password */}
+            {/* password textinput */}
 
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <TextInput
@@ -146,7 +146,7 @@ const LoginScreen = ({ setIsLoggedIn }: { setIsLoggedIn: (value: boolean) => voi
 
 
 
-              {/* TouchableOpacity for showing/hiding password */}
+              {/* touchableOpacity for showing/hiding password */}
               <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                 <Ionicons
                   style={{
@@ -162,11 +162,11 @@ const LoginScreen = ({ setIsLoggedIn }: { setIsLoggedIn: (value: boolean) => voi
 
             </View>
 
-            {/* Display error message if exists */}
+            {/* display error message if exists */}
             {passwordError ? <Text className='text-left' style={{ color: 'red', marginTop: 0  }}>{passwordError}</Text> : null}
 
 
-            {/* Forgot Password Text */}
+            {/* forgot password link */}
             <View className='items-end  mt-8'>
               <Link href="/pwdforgot" className='font-semibold '>
                 Forgot Password?
@@ -178,7 +178,7 @@ const LoginScreen = ({ setIsLoggedIn }: { setIsLoggedIn: (value: boolean) => voi
 
           </View>
 
-          {/* TouchableOpacity for the log-in button */}
+          {/* log in button */}
           <View style={{ width: '85%' }} className='mt-8 bottom-10'>
 
 
@@ -199,7 +199,7 @@ const LoginScreen = ({ setIsLoggedIn }: { setIsLoggedIn: (value: boolean) => voi
 
             
 
-            {/* Sign Up button */}
+            {/* sign up button */}
             <Text className='text-lg text-gray-500 mt-6 text-center' >
               Don't have an account?{' '}
 

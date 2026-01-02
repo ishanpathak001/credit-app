@@ -29,7 +29,7 @@ export default function Customers() {
   const { token } = useContext(AuthContext);
   const { isDark } = useTheme();
 
-  // Fetch all customers
+  // fetch all customers
   const fetchCustomers = async () => {
     try {
       const headers = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
@@ -43,7 +43,7 @@ export default function Customers() {
 
   useEffect(() => { fetchCustomers(); }, [token]);
 
-  // Filter customers based on search input
+  // filter customers based on search input
   useEffect(() => {
     if (!search) return setFilteredCustomers(customers);
     const filtered = customers.filter(c =>
@@ -72,7 +72,7 @@ export default function Customers() {
         Alert.alert("Success", res.data.message);
         resetAddCustomerForm();
         setModalVisible(false);
-        fetchCustomers(); // refresh list
+        fetchCustomers(); 
       } else {
         Alert.alert(res.data.message);
       }
@@ -82,22 +82,22 @@ export default function Customers() {
     }
   };
 
-  // Open modal for selected customer
+  // open modal when a customer is selected
   const openCustomerModal = (customer: Customer) => {
     setSelectedCustomer(customer);
     setCustomerModalVisible(true);
   };
 
-  // Callback after deleting customer from profile
+  // handle customer deletion and refresh list
   const handleCustomerDeleted = () => {
     setCustomerModalVisible(false);
-    fetchCustomers(); // refresh the list after deletion
+    fetchCustomers(); 
   };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? '#111827' : '#f3f4f6', padding: 16 }}>
       
-      {/* Search + Add */}
+      {/* search and add */}
       <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
         <TextInput
           placeholder="Search by name or phone"
@@ -121,7 +121,7 @@ export default function Customers() {
         </Pressable>
       </View>
 
-      {/* Customer List */}
+      {/* customer list */}
       <FlatList
         data={filteredCustomers}
         keyExtractor={(item) => item.id.toString()}
@@ -143,7 +143,7 @@ export default function Customers() {
         )}
       />
 
-      {/* Add Customer Modal */}
+      {/*add customer modal */}
       <Modal visible={modalVisible} transparent animationType="slide">
         <View style={{ flex:1, backgroundColor:'rgba(0,0,0,0.5)', justifyContent:'center', padding:16 }}>
           <View style={{ backgroundColor:isDark ? '#1f2937' : '#fff', padding:20, borderRadius:12 }}>
@@ -185,7 +185,7 @@ export default function Customers() {
         </View>
       </Modal>
 
-      {/* Customer Detail Modal */}
+      {/* customer detail modal */}
       {selectedCustomer && (
         <CustomerCardModal
           visible={customerModalVisible}

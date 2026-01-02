@@ -9,9 +9,6 @@ const pool = new Pool({
   port: parseInt(process.env.DB_PORT, 10),
 });
 
-// pool.on('connect', () => {
-//   console.log('Connected to the database');
-// });
 
 pool.connect()
   .then(client => {
@@ -24,7 +21,7 @@ pool.connect()
   })
   .catch(err => {
     console.error("❌ Error connecting to PostgreSQL:", err);
-    process.exit(1); // stop app if DB isn’t available
+    process.exit(1); 
   });
 
 module.exports = pool;

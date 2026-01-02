@@ -1,13 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
-import {
-  View,
-  Text,
-  Pressable,
-  TextInput,
-  ScrollView,
-  ActivityIndicator,
-  Alert,
-} from 'react-native';
+import { View, Text, Pressable, TextInput, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import API from '../../../src/api/api';
 import { AuthContext } from '../../../src/context/AuthContext';
@@ -42,7 +34,7 @@ const Transactions = () => {
   const [detailVisible, setDetailVisible] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
 
-  // Fetch transactions
+  // fetch transactions
   const fetchTransactions = async () => {
     setLoading(true);
     try {
@@ -60,7 +52,7 @@ const Transactions = () => {
   useEffect(() => {
     fetchTransactions();
 
-    // Listen for global updates
+    // listen for global updates
     const unsubSettled = on('transactions:settled', (updatedTransaction: Transaction) => {
       setTransactions(prev =>
         prev.map(t => (t.id === updatedTransaction.id ? updatedTransaction : t))
@@ -68,7 +60,7 @@ const Transactions = () => {
     });
 
     const unsubCustomerAdded = on('customers:added', () => {
-      fetchTransactions(); // refresh if a new customer is added
+      fetchTransactions(); // refresh when new customer is added
     });
 
     const unsubCustomerDeleted = on('customers:deleted', (deletedCustomerPhone: string) => {
@@ -87,7 +79,7 @@ const Transactions = () => {
     };
   }, [filter, token]);
 
-  // Filter transactions based on search input
+  // filter transactions based on search input
   const filteredTransactions = transactions.filter(t => {
     const q = search.toLowerCase();
     return (
@@ -192,7 +184,7 @@ const Transactions = () => {
         ))}
       </View>
 
-      {/* Search & Add */}
+      {/* search and add */}
       <View style={{ flexDirection: 'row', marginBottom: 16 }}>
         <TextInput
           placeholder="Search by customer, phone, or description"
@@ -224,7 +216,7 @@ const Transactions = () => {
         </Pressable>
       </View>
 
-      {/* Transaction List */}
+      {/* transaction list */}
       {loading ? (
         <ActivityIndicator size="large" color="#2563eb" style={{ marginTop: 32 }} />
       ) : filteredTransactions.length === 0 ? (
@@ -237,7 +229,7 @@ const Transactions = () => {
         </ScrollView>
       )}
 
-      {/* Modals */}
+      {/* modal call of add and detail transaction */}
       <AddTransactionModal
         visible={addVisible}
         onClose={() => setAddVisible(false)}

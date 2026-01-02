@@ -3,7 +3,7 @@ const router = express.Router();
 const pool = require("../db"); // your pg Pool connection
 const { authenticateToken } = require('../middleware/auth');
 
-// ✅ GET all customers for logged-in user
+// GET all customers for logged in user
 router.get("/", authenticateToken, async (req, res) => {
   try {
     const userId = req.userId; // from auth middleware
@@ -23,7 +23,7 @@ router.get("/", authenticateToken, async (req, res) => {
   }
 });
 
-// ✅ ADD a new customer
+// add a new customer
 router.post("/", authenticateToken, async (req, res) => {
   try {
     const userId = req.userId;
@@ -69,13 +69,13 @@ router.get('/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// ✅ GET transactions + total pending credit for a customer
+//  GET transactions + total pending credit for a customer
 router.get('/:id/transactions', authenticateToken, async (req, res) => {
   try {
     const userId = req.userId;
     const customerId = parseInt(req.params.id, 10);
 
-    // Get all transactions
+    
     const q = `
       SELECT id, amount, description, created_at, status
       FROM credits
@@ -88,10 +88,10 @@ router.get('/:id/transactions', authenticateToken, async (req, res) => {
       amount: parseFloat(row.amount),
       date: row.created_at,
       description: row.description,
-      status: row.status // expecting 'pending' or 'settled'
+      status: row.status 
     }));
 
-    // Calculate total pending credit
+    // calculate total pending credit
     const total_pending = transactions
       .filter(t => t.status === 'pending')
       .reduce((sum, t) => sum + t.amount, 0);
@@ -103,16 +103,16 @@ router.get('/:id/transactions', authenticateToken, async (req, res) => {
   }
 });
 
-// DELETE a customer and all their transactions
+// delete a customer and all their transactions
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const userId = req.userId;
     const customerId = parseInt(req.params.id, 10);
 
-    // Delete all transactions for this customer first
+    // delete all transactions for this customer first
     await pool.query('DELETE FROM credits WHERE user_id = $1 AND customer_id = $2', [userId, customerId]);
 
-    // Then delete the customer
+    // then delete the customer
     const result = await pool.query(
       'DELETE FROM customers WHERE id = $1 AND user_id = $2 RETURNING *',
       [customerId, userId]

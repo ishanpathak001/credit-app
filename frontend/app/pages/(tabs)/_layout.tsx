@@ -21,9 +21,9 @@ export default function TabsLayout() {
           backgroundColor: tabBarBackground,
           borderTopLeftRadius: 20,
           borderTopRightRadius: 20,
-          overflow: "hidden", // ensures the rounded corners work
-          borderTopColor: tabBarBackground, // same as background to hide the top border
-          position: "absolute", // remove extra white gap
+          overflow: "hidden", 
+          borderTopColor: tabBarBackground, 
+          position: "absolute", 
           left: 0,
           right: 0,
           bottom: 0,

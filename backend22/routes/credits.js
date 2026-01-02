@@ -3,10 +3,9 @@ const router = express.Router();
 const pool = require('../db');
 const { authenticateToken } = require('../middleware/auth');
 
-/* ======================================================
-   ✅ GET /api/credits/limit
-   Fetch the current user's global credit limit
-   ====================================================== */
+
+   // GET /api/credits/limit
+  
 router.get('/limit', authenticateToken, async (req, res) => {
   try {
     const userId = req.userId;
@@ -30,10 +29,11 @@ router.get('/limit', authenticateToken, async (req, res) => {
   }
 });
 
-/* ======================================================
-   ✅ PUT /api/credits/limit
-   Update the current user's global credit limit
-   ====================================================== */
+
+  
+// PUT /api/credits/limit
+   
+   
 router.put('/limit', authenticateToken, async (req, res) => {
   try {
     const userId = req.userId;
@@ -59,10 +59,10 @@ router.put('/limit', authenticateToken, async (req, res) => {
   }
 });
 
-/* ======================================================
-   ✅ POST /api/credits
-   Create a credit/transaction
-   ====================================================== */
+
+   
+// POST /api/credits
+  
 router.post('/', authenticateToken, async (req, res) => {
   try {
     const userId = req.userId;
@@ -72,7 +72,7 @@ router.post('/', authenticateToken, async (req, res) => {
       return res.status(400).json({ message: 'Amount is required' });
     }
 
-    // ✅ Optional: check if amount exceeds global/customer-specific limit
+    // check if amount exceeds global limit
     const limitRes = await pool.query(
       `SELECT global_credit_limit FROM users WHERE id = $1`,
       [userId]
@@ -102,10 +102,10 @@ router.post('/', authenticateToken, async (req, res) => {
   }
 });
 
-/* ======================================================
-   ✅ PATCH /api/credits/:id/settle
-   Settle a transaction
-   ====================================================== */
+
+   // PATCH /api/credits/:id/settle
+   
+   
 router.patch('/:id/settle', authenticateToken, async (req, res) => {
   try {
     const userId = req.userId;

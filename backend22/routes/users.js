@@ -4,9 +4,9 @@ const pool = require('../db');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
-/* ======================================================
-   AUTH MIDDLEWARE
-   ====================================================== */
+
+   // auth middleware
+   
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -24,9 +24,9 @@ function authenticateToken(req, res, next) {
   }
 }
 
-/* ======================================================
-   SIGNUP
-   ====================================================== */
+
+   // signup
+   
 router.post('/signup', async (req, res) => {
   try {
     const { full_name, phone_number, password } = req.body;
@@ -62,9 +62,7 @@ router.post('/signup', async (req, res) => {
   }
 });
 
-/* ======================================================
-   LOGIN
-   ====================================================== */
+// login
 router.post('/login', async (req, res) => {
   try {
     const { phone_number, password } = req.body;
@@ -113,9 +111,8 @@ router.post('/login', async (req, res) => {
   }
 });
 
-/* ======================================================
-   PROFILE (CURRENT USER)
-   ====================================================== */
+// current user info for profile
+
 router.get('/profile', authenticateToken, async (req, res) => {
   try {
     const userRes = await pool.query(
@@ -141,9 +138,7 @@ router.get('/profile', authenticateToken, async (req, res) => {
   }
 });
 
-/* ======================================================
-   TOTAL CREDIT (ALL CUSTOMERS)
-   ====================================================== */
+//total credit for all customers
 router.get('/total-credit', authenticateToken, async (req, res) => {
   try {
     const result = await pool.query(
@@ -160,9 +155,8 @@ router.get('/total-credit', authenticateToken, async (req, res) => {
   }
 });
 
-/* ======================================================
-   MOST CREDIT CUSTOMER
-   ====================================================== */
+// most credit customer(all time)
+
 router.get('/most-credit-customer', authenticateToken, async (req, res) => {
   try {
     const q = `
@@ -201,9 +195,8 @@ router.get('/most-credit-customer', authenticateToken, async (req, res) => {
   }
 });
 
-/* ======================================================
-   GET GLOBAL CREDIT LIMIT
-   ====================================================== */
+// GET global credit limit
+
 router.get('/global-limit', authenticateToken, async (req, res) => {
   try {
     const result = await pool.query(
@@ -225,9 +218,9 @@ router.get('/global-limit', authenticateToken, async (req, res) => {
   }
 });
 
-/* ======================================================
-   UPDATE GLOBAL CREDIT LIMIT
-   ====================================================== */
+
+// update global credit limit
+
 router.put('/global-limit', authenticateToken, async (req, res) => {
   try {
     const { global_credit_limit } = req.body;

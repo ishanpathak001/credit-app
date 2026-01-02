@@ -3,7 +3,7 @@ const router = express.Router();
 const pool = require('../db'); // your PostgreSQL pool
 const { authenticateToken } = require('../middleware/auth');
 
-// ✅ POST /api/transactions - create a credit/transaction
+// POST /api/transactions - create a credit/transaction
 router.post('/', authenticateToken, async (req, res) => {
   try {
     const userId = req.userId;
@@ -29,7 +29,7 @@ router.post('/', authenticateToken, async (req, res) => {
   }
 });
 
-// ✅ GET /api/transactions/recent-transactions (last 5 for Home)
+// GET /api/transactions/recent-transactions (last 5 for Home)
 router.get('/recent-transactions', authenticateToken, async (req, res) => {
   try {
     const userId = req.userId;
@@ -52,7 +52,7 @@ router.get('/recent-transactions', authenticateToken, async (req, res) => {
       description: row.description,
       customerName: row.customerName,
       date: row.created_at,
-      status: row.status, // ✅ include status for frontend coloring
+      status: row.status,
     }));
 
     res.json({ transactions });
@@ -62,7 +62,7 @@ router.get('/recent-transactions', authenticateToken, async (req, res) => {
   }
 });
 
-// ✅ GET /api/transactions/all-transactions?filter=15d|1m|all
+// GET /api/transactions/all-transactions?filter=15d|1m|all
 router.get('/all-transactions', authenticateToken, async (req, res) => {
   try {
     const userId = req.userId;
@@ -102,14 +102,14 @@ router.get('/all-transactions', authenticateToken, async (req, res) => {
   }
 });
 
-// ✅ GET /api/transactions/total-credit - total credit for Home.tsx
+// GET /api/transactions/total-credit 
 router.get('/total-credit', authenticateToken, async (req, res) => {
   try {
     const userId = req.userId;
 
     const result = await pool.query(
       'SELECT COALESCE(SUM(amount), 0) AS total_credit FROM credits WHERE user_id = $1 AND status = $2',
-      [userId, 'pending'] // ✅ only sum pending credits
+      [userId, 'pending'] //only sum pending credits
     );
 
     res.json({ totalCredit: parseFloat(result.rows[0].total_credit) });

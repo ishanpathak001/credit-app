@@ -82,7 +82,7 @@ export default function CustomerProfile({ onUpdated }: Props) {
               if (res.data.success) {
                 Alert.alert("Deleted", res.data.message);
                 if (onUpdated) onUpdated(); // refresh parent pages
-                router.back(); // go back to customers list
+                router.back(); 
               } else {
                 Alert.alert("Error", "Failed to delete customer");
               }
@@ -120,7 +120,7 @@ export default function CustomerProfile({ onUpdated }: Props) {
     <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? "#111827" : "#f3f4f6" }}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      {/* Header with Back Button */}
+      {/* back button*/}
       <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 1, borderBottomColor: isDark ? "#374151" : "#d1d5db" }}>
         <Pressable onPress={() => router.back()} style={{ marginRight: 16 }}>
           <Ionicons name="arrow-back" size={24} color={isDark ? "#fff" : "#111"} />
@@ -129,13 +129,13 @@ export default function CustomerProfile({ onUpdated }: Props) {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
-        {/* Customer Info */}
+        {/* customer info */}
         <View style={{ padding: 16, borderRadius: 12, backgroundColor: isDark ? "#1f2937" : "#fff" }}>
           <Text style={{ fontWeight: "600", color: isDark ? "#d1d5db" : "#6b7280" }}>Phone Number</Text>
           <Text style={{ fontSize: 16, fontWeight: "700", color: isDark ? "#fff" : "#111" }}>{customer.phone_number}</Text>
         </View>
 
-        {/* Total Credit Stats */}
+        {/* total credit stats */}
         <View style={{ padding: 16, borderRadius: 12, backgroundColor: isDark ? "#1f2937" : "#fff", gap: 8 }}>
           <Text style={{ fontWeight: "600", color: isDark ? "#d1d5db" : "#6b7280" }}>Total Pending Credit</Text>
           <Text style={{ fontSize: 18, fontWeight: "700", color: isDark ? "#fff" : "#111" }}>₹{totalPending.toLocaleString()}</Text>
@@ -144,7 +144,7 @@ export default function CustomerProfile({ onUpdated }: Props) {
           <Text style={{ fontSize: 18, fontWeight: "700", color: isDark ? "#fff" : "#111" }}>₹{totalCreditTaken.toLocaleString()}</Text>
         </View>
 
-        {/* View Transactions Button */}
+        {/* view transactions button */}
         <Pressable
           onPress={() => router.push({ pathname: "../transactions", params: { phone: customer.phone_number } })}
           style={{ backgroundColor: "#2563eb", padding: 16, borderRadius: 12, alignItems: "center" }}
@@ -152,7 +152,7 @@ export default function CustomerProfile({ onUpdated }: Props) {
           <Text style={{ color: "#fff", fontWeight: "700" }}>View Transactions</Text>
         </Pressable>
 
-        {/* Delete Customer Button */}
+        {/* delete customer button */}
         <Pressable
           onPress={deleteCustomer}
           style={{ backgroundColor: "#ef4444", padding: 16, borderRadius: 12, alignItems: "center", marginTop: 12 }}

@@ -41,11 +41,5 @@ export default function LayoutWrapper() {
   );
 
 
-  //  return (
-  //   <Stack>
-     
-  //       <Stack.Screen name="tabs/login" options={{ headerShown: false }} />
-        
-  //   </Stack>
-  // );
+ 
 }

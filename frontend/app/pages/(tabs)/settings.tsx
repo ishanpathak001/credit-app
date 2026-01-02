@@ -15,9 +15,8 @@ const Settings = () => {
   const [currentLimit, setCurrentLimit] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
 
-  /* ======================================================
-     FETCH GLOBAL LIMIT
-     ====================================================== */
+  
+  // fetch global limit
   useEffect(() => {
     if (!token) return;
 
@@ -38,9 +37,7 @@ const Settings = () => {
     fetchLimit();
   }, [token]);
 
-  /* ======================================================
-     SAVE GLOBAL LIMIT
-     ====================================================== */
+  // save global limit
   const handleSaveGlobalLimit = async () => {
     const value = parseFloat(globalLimitInput);
 
@@ -70,9 +67,7 @@ const Settings = () => {
     }
   };
 
-  /* ======================================================
-     LOGOUT
-     ====================================================== */
+  // logout handler
   const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure?', [
       { text: 'Cancel', style: 'cancel' },
@@ -95,7 +90,7 @@ const Settings = () => {
           Settings
         </Text>
 
-        {/* Profile */}
+        {/* profile */}
         <View className={isDark ? 'bg-gray-800 p-4 rounded-2xl mb-6' : 'bg-white p-4 rounded-2xl mb-6'}>
           <Text className={isDark ? 'text-gray-300' : 'text-gray-500'}>Logged in as</Text>
           <Text className={isDark ? 'text-white font-bold text-lg' : 'text-gray-800 font-bold text-lg'}>
@@ -103,13 +98,13 @@ const Settings = () => {
           </Text>
         </View>
 
-        {/* Theme */}
+        {/*theme */}
         <View className={isDark ? 'bg-gray-800 p-4 rounded-2xl mb-6 flex-row justify-between' : 'bg-white p-4 rounded-2xl mb-6 flex-row justify-between'}>
           <Text className={isDark ? 'text-white' : 'text-gray-800'}>Dark Mode</Text>
           <Switch value={isDark} onValueChange={toggleTheme} />
         </View>
 
-        {/* Global Limit */}
+        {/* global limit */}
         <View className={isDark ? 'bg-gray-800 p-4 rounded-2xl mb-6' : 'bg-white p-4 rounded-2xl mb-6'}>
           <Text className={isDark ? 'text-gray-300 mb-2' : 'text-gray-500 mb-2'}>
             Limit for each customer:

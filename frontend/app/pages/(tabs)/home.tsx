@@ -40,7 +40,7 @@ const Home = () => {
     marginBottom: 16,
   };
 
-  // Fetch total credit and recent transactions
+  // fetch total credit and recent transactions
   const fetchData = async () => {
     try {
       const headers = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
@@ -57,15 +57,15 @@ const Home = () => {
   useEffect(() => {
     fetchData();
 
-    // Listen for new transactions being added
+    //listen for new transactions being added
     const unsubAdded = on('transactions:added', fetchData);
 
-    // Listen for transactions being settled
+    // listen for transactions being settled
     const unsubSettled = on('transactions:settled', (updatedTransaction: Transaction) => {
-      // Update total credit
+      
       fetchData();
 
-      // Also update recent transactions locally
+      // update recent transactions locally
       setTransactions(prev =>
         prev.map(t => (t.id === updatedTransaction.id ? updatedTransaction : t))
       );
@@ -78,7 +78,7 @@ const Home = () => {
   }, [token]);
 
   const renderTransaction = ({ item }: { item: Transaction }) => {
-    const amountColor = item.status === 'settled' ? '#16a34a' : '#d97706'; // Green if settled, yellow if pending
+    const amountColor = item.status === 'settled' ? '#16a34a' : '#d97706'; 
     const dateStr = item.date
       ? new Date(item.date).toLocaleDateString('en-IN', {
           day: '2-digit',
@@ -133,7 +133,7 @@ const Home = () => {
         <>
      
       <View style={{ flex: 1, padding: 16, marginBottom: 24 }}>
-        {/* Greeting + profile button */}
+        {/* greeting and profile button */}
         <View
           style={{
             flexDirection: 'row',
@@ -150,7 +150,7 @@ const Home = () => {
           </TouchableOpacity>
         </View>
           
-        {/* Total Credit Card */}
+        {/* total credit card */}
         <View style={cardStyle}>
           <Text style={{ color: isDark ? '#d1d5db' : '#6b7280', fontSize: 12 }}>Total Credit Given</Text>
           <Text style={{ fontSize: 28, fontWeight: '700', marginTop: 8, color: '#d97706' }}>
@@ -160,9 +160,9 @@ const Home = () => {
 
         <CustomerUsageChart />
 
-        {/* Recent Transactions Card */}
+        {/* recent transactions card */}
         <View style={cardStyle}>
-          {/* Header + Buttons */}
+          
           <View
             style={{
               flexDirection: 'row',
@@ -175,7 +175,7 @@ const Home = () => {
               Recent Transactions
             </Text>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              {/* Add Transaction Button */}
+              {/* add transaction button */}
               <Pressable
                 style={{
                   backgroundColor: '#2563eb',
@@ -189,14 +189,14 @@ const Home = () => {
                 <Text style={{ color: '#fff', fontWeight: '600' }}>Add</Text>
               </Pressable>
 
-              {/* View All Button */}
+              {/* view all button */}
               <Pressable onPress={() => router.push('../transactions')}>
                 <Text style={{ color: '#2563eb', fontWeight: '600' }}>View all</Text>
               </Pressable>
             </View>
           </View>
 
-          {/* Transactions List */}
+          {/* transactions list */}
           {transactions.length === 0 ? (
             <Text style={{ color: isDark ? '#9ca3af' : '#6b7280' }}>No recent transactions.</Text>
           ) : (
@@ -210,7 +210,7 @@ const Home = () => {
         
       </View>
 
-      {/* Add Transaction Modal */}
+      {/* add transaction modal component */}
       <AddTransactionModal visible={modalVisible} onClose={() => setModalVisible(false)} onAdded={fetchData} />
       </>}
       ListFooterComponent={<View style={{ height: 14 }} />} // padding at the bottom
