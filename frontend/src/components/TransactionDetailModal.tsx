@@ -69,7 +69,7 @@ const TransactionDetailModal: FC<Props> = ({ visible, onClose, transaction }) =>
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20, backgroundColor: "rgba(0,0,0,0.5)" }}>
         <View
           style={{
             width: '100%',
@@ -107,7 +107,7 @@ const TransactionDetailModal: FC<Props> = ({ visible, onClose, transaction }) =>
                   color: isSettled ? '#16a34a' : '#d97706', // green if settled, yellow if pending
                 }}
               >
-                ₹{localTransaction.amount.toLocaleString()}
+                रू{localTransaction.amount.toLocaleString()}
               </Text>
             </View>
 

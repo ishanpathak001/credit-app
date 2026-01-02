@@ -5,6 +5,9 @@ const userRoutes = require('./routes/users');
 const customersRouter = require("./routes/customers");
 const creditsRouter = require('./routes/credits');
 const transactionsRouter =require("./routes/transactions") ;
+const analyticsRouter = require('./routes/analytics');
+
+
 
 
 dotenv.config();
@@ -21,7 +24,7 @@ app.use('/api/users', userRoutes);
 app.use("/api/customers", customersRouter);
 app.use('/api/credits', creditsRouter);
 app.use("/api/transactions", transactionsRouter);
-
+app.use('/api/analytics', analyticsRouter);
 
 
 

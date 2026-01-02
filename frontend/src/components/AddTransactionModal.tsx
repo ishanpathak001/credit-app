@@ -172,7 +172,7 @@ const AddTransactionModal: FC<Props> = ({ visible, onClose, onAdded }) => {
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={() => { resetForm(); onClose(); }}>
-      <View style={{ flex: 1, justifyContent: 'center', padding: 20 }}>
+      <View style={{ flex: 1, justifyContent: 'center', padding: 20, backgroundColor: "rgba(0,0,0,0.5)" }}>
         <View style={{ backgroundColor: '#fff', borderRadius: 12, padding: 16 }}>
 
           <Text style={{ fontSize: 18, fontWeight: '700', marginBottom: 12 }}>

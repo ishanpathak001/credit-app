@@ -112,7 +112,7 @@ const Settings = () => {
         {/* Global Limit */}
         <View className={isDark ? 'bg-gray-800 p-4 rounded-2xl mb-6' : 'bg-white p-4 rounded-2xl mb-6'}>
           <Text className={isDark ? 'text-gray-300 mb-2' : 'text-gray-500 mb-2'}>
-            Global Credit Limit (₹)
+            Limit for each customer:
           </Text>
 
           <TextInput
@@ -121,7 +121,7 @@ const Settings = () => {
             keyboardType="numeric"
             placeholder={
               currentLimit !== null
-                ? `Current limit: ₹${currentLimit}`
+                ? `Current limit: रू${currentLimit}`
                 : 'Enter global credit limit'
             }
             placeholderTextColor={isDark ? '#9ca3af' : '#6b7280'}

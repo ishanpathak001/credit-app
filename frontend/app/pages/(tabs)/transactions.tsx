@@ -114,7 +114,7 @@ const Transactions = () => {
           </View>
           <View className="items-end">
             <Text className="font-bold" style={{ color: amountColor }}>
-              ₹{item.amount.toLocaleString()}
+              रू{item.amount.toLocaleString()}
             </Text>
             <Text className="text-gray-500 text-xs">
               {new Date(item.date).toLocaleString('en-IN', {

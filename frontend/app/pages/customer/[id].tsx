@@ -146,7 +146,7 @@ export default function CustomerProfile({ onUpdated }: Props) {
 
         {/* View Transactions Button */}
         <Pressable
-          onPress={() => router.push({ pathname: "../customers", params: { phone: customer.phone_number } })}
+          onPress={() => router.push({ pathname: "../transactions", params: { phone: customer.phone_number } })}
           style={{ backgroundColor: "#2563eb", padding: 16, borderRadius: 12, alignItems: "center" }}
         >
           <Text style={{ color: "#fff", fontWeight: "700" }}>View Transactions</Text>

@@ -1,4 +1,4 @@
-import { View, Text, FlatList, Pressable, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, Pressable, TouchableOpacity, ScrollView } from 'react-native';
 import { useEffect, useState, useContext } from 'react';
 import API from '../../../src/api/api';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,6 +8,9 @@ import { AuthContext } from '../../../src/context/AuthContext';
 import { on } from '../../../src/utils/eventBus';
 import { useTheme } from '../../../src/context/ThemeContext';
 import AddTransactionModal from '../../../src/components/AddTransactionModal';
+import BarChart75 from '../../../src/components/CustomerUsageChart';
+import CustomerUsageChart from '../../../src/components/CustomerUsageChart';
+
 
 interface Transaction {
   description: string;
@@ -112,7 +115,7 @@ const Home = () => {
           </Text>
         </View>
         <View style={{ alignItems: 'flex-end' }}>
-          <Text style={{ fontWeight: '700', color: amountColor }}>₹{item.amount.toLocaleString()}</Text>
+          <Text style={{ fontWeight: '700', color: amountColor }}>रू{item.amount.toLocaleString()}</Text>
           <Text style={{ color: isDark ? '#9ca3af' : '#6b7280', fontSize: 12 }}>{dateStr}</Text>
           <Text style={{ color: amountColor, fontSize: 10, fontWeight: '600' }}>
             {item.status?.toUpperCase() ?? 'PENDING'}
@@ -124,7 +127,7 @@ const Home = () => {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? '#111827' : '#f3f4f6' }}>
-      <View style={{ flex: 1, padding: 16 }}>
+      <View style={{ flex: 1, padding: 16, marginBottom: 24 }}>
         {/* Greeting + profile button */}
         <View
           style={{
@@ -141,14 +144,16 @@ const Home = () => {
             <Ionicons name="person-circle-outline" size={36} color={isDark ? '#fff' : '#111'} />
           </TouchableOpacity>
         </View>
-
+          
         {/* Total Credit Card */}
         <View style={cardStyle}>
           <Text style={{ color: isDark ? '#d1d5db' : '#6b7280', fontSize: 12 }}>Total Credit Given</Text>
-          <Text style={{ fontSize: 28, fontWeight: '700', marginTop: 8, color: '#16a34a' }}>
-            ₹{totalCredit.toLocaleString()}
+          <Text style={{ fontSize: 28, fontWeight: '700', marginTop: 8, color: '#d97706' }}>
+            रू{totalCredit.toLocaleString()}
           </Text>
         </View>
+
+        <CustomerUsageChart />
 
         {/* Recent Transactions Card */}
         <View style={cardStyle}>
@@ -197,6 +202,7 @@ const Home = () => {
             />
           )}
         </View>
+        
       </View>
 
       {/* Add Transaction Modal */}
