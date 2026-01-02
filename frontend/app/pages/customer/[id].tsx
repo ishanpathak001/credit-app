@@ -1,4 +1,11 @@
-import { View, Text, Pressable, ScrollView, ActivityIndicator, Alert } from "react-native";
+import {
+  View,
+  Text,
+  Pressable,
+  ScrollView,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
 import { useEffect, useState, useContext } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -6,6 +13,7 @@ import { AuthContext } from "../../../src/context/AuthContext";
 import API from "../../../src/api/api";
 import { useTheme } from "../../../src/context/ThemeContext";
 import { router, Stack, useGlobalSearchParams } from "expo-router";
+import { emit } from "@/src/utils/eventBus";
 
 type Transaction = {
   id: number;
@@ -21,15 +29,11 @@ type Customer = {
   phone_number: string;
 };
 
-type Props = {
-  onUpdated?: () => void; // callback to refresh customers list/stats
-};
-
-export default function CustomerProfile({ onUpdated }: Props) {
+export default function CustomerProfile() {
   const { token } = useContext(AuthContext);
   const { isDark } = useTheme();
   const params = useGlobalSearchParams();
-  const customerId = parseInt(params.id as string, 10);
+  const customerId = Number(params.id);
 
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -37,39 +41,53 @@ export default function CustomerProfile({ onUpdated }: Props) {
   const [totalPending, setTotalPending] = useState(0);
   const [totalCreditTaken, setTotalCreditTaken] = useState(0);
 
+  /* =========================
+     FETCH CUSTOMER + TXNS
+     ========================= */
   const fetchCustomer = async () => {
-    if (!customerId) return;
+    if (!customerId || !token) return;
+
     setLoading(true);
     try {
-      const headers = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-      const resCustomer = await API.get(`/customers/${customerId}`, headers);
+      const headers = { Authorization: `Bearer ${token}` };
+
+      const resCustomer = await API.get(
+        `/customers/${customerId}`,
+        { headers }
+      );
       setCustomer(resCustomer.data);
 
-      const resTransactions = await API.get(`/customers/${customerId}/transactions`, headers);
-      const allTransactions: Transaction[] = resTransactions.data.transactions || [];
-      setTransactions(allTransactions);
+      const resTransactions = await API.get(
+        `/customers/${customerId}/transactions`,
+        { headers }
+      );
 
-      const pending = allTransactions
+      const txns: Transaction[] = resTransactions.data.transactions || [];
+      setTransactions(txns);
+
+      const pending = txns
         .filter(t => t.status === "pending")
-        .reduce((acc, t) => acc + (t.amount ?? 0), 0);
+        .reduce((sum, t) => sum + t.amount, 0);
 
-      const totalTaken = allTransactions
-        .reduce((acc, t) => acc + (t.amount ?? 0), 0);
+      const total = txns.reduce((sum, t) => sum + t.amount, 0);
 
       setTotalPending(pending);
-      setTotalCreditTaken(totalTaken);
-    } catch (err: any) {
-      console.error("Customer profile fetch error:", err);
-      Alert.alert("Error", "Failed to fetch customer profile");
+      setTotalCreditTaken(total);
+    } catch (err) {
+      console.error(err);
+      Alert.alert("Error", "Failed to fetch customer");
     } finally {
       setLoading(false);
     }
   };
 
-  const deleteCustomer = async () => {
+  /* =========================
+     DELETE CUSTOMER
+     ========================= */
+  const deleteCustomer = () => {
     Alert.alert(
       "Confirm Deletion",
-      `Are you sure? All of ${customer?.full_name}'s transactions will also be deleted.`,
+      "This will permanently delete the customer and all transactions.",
       [
         { text: "Cancel", style: "cancel" },
         {
@@ -77,21 +95,23 @@ export default function CustomerProfile({ onUpdated }: Props) {
           style: "destructive",
           onPress: async () => {
             try {
-              const headers = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-              const res = await API.delete(`/customers/${customerId}`, headers);
-              if (res.data.success) {
-                Alert.alert("Deleted", res.data.message);
-                if (onUpdated) onUpdated(); // refresh parent pages
-                router.back(); 
-              } else {
-                Alert.alert("Error", "Failed to delete customer");
-              }
+              const headers = { Authorization: `Bearer ${token}` };
+              await API.delete(`/customers/${customerId}`, { headers });
+
+              // 🔥 IMPORTANT PART
+              emit("customers:updated");
+              emit("transactions:updated");
+
+              Alert.alert("Deleted", "Customer deleted successfully");
+              router.back();
             } catch (err: any) {
-              console.error("Delete customer error:", err);
-              Alert.alert("Error", err?.response?.data?.message ?? "Failed to delete customer");
+              Alert.alert(
+                "Error",
+                err?.response?.data?.message || "Delete failed"
+              );
             }
-          }
-        }
+          },
+        },
       ]
     );
   };
@@ -100,66 +120,88 @@ export default function CustomerProfile({ onUpdated }: Props) {
     fetchCustomer();
   }, [customerId, token]);
 
+  /* =========================
+     UI STATES
+     ========================= */
   if (loading) {
     return (
-      <SafeAreaView style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: isDark ? "#111827" : "#f3f4f6" }}>
-        <ActivityIndicator color={isDark ? "#fff" : "#111"} size="large" />
+      <SafeAreaView style={{ flex: 1, justifyContent: "center" }}>
+        <ActivityIndicator size="large" />
       </SafeAreaView>
     );
   }
 
   if (!customer) {
     return (
-      <SafeAreaView style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: isDark ? "#111827" : "#f3f4f6" }}>
-        <Text style={{ color: isDark ? "#fff" : "#111" }}>Customer not found</Text>
+      <SafeAreaView style={{ flex: 1, justifyContent: "center" }}>
+        <Text>Customer not found</Text>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? "#111827" : "#f3f4f6" }}>
+    <SafeAreaView
+      style={{ flex: 1, backgroundColor: isDark ? "#111827" : "#f3f4f6" }}
+    >
       <Stack.Screen options={{ headerShown: false }} />
 
-      {/* back button*/}
-      <View style={{ flexDirection: "row", alignItems: "center", padding: 16, borderBottomWidth: 1, borderBottomColor: isDark ? "#374151" : "#d1d5db" }}>
-        <Pressable onPress={() => router.back()} style={{ marginRight: 16 }}>
-          <Ionicons name="arrow-back" size={24} color={isDark ? "#fff" : "#111"} />
+      {/* HEADER: BACK */}
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          padding: 16,
+        }}
+      >
+        <Pressable onPress={() => router.back()}>
+          <Ionicons
+            name="arrow-back"
+            size={24}
+            color={isDark ? "#fff" : "#111"}
+          />
         </Pressable>
-        <Text style={{ fontSize: 20, fontWeight: "700", color: isDark ? "#fff" : "#111" }}>{customer.full_name}</Text>
+        <Text
+          style={{
+            fontSize: 20,
+            fontWeight: "700",
+            marginLeft: 12,
+            color: isDark ? "#fff" : "#111",
+          }}
+        >
+          {customer.full_name}
+        </Text>
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
-        {/* customer info */}
-        <View style={{ padding: 16, borderRadius: 12, backgroundColor: isDark ? "#1f2937" : "#fff" }}>
-          <Text style={{ fontWeight: "600", color: isDark ? "#d1d5db" : "#6b7280" }}>Phone Number</Text>
-          <Text style={{ fontSize: 16, fontWeight: "700", color: isDark ? "#fff" : "#111" }}>{customer.phone_number}</Text>
+        <View style={{ padding: 16, borderRadius: 12, backgroundColor: "#fff" }}>
+          <Text>Phone</Text>
+          <Text>{customer.phone_number}</Text>
         </View>
 
-        {/* total credit stats */}
-        <View style={{ padding: 16, borderRadius: 12, backgroundColor: isDark ? "#1f2937" : "#fff", gap: 8 }}>
-          <Text style={{ fontWeight: "600", color: isDark ? "#d1d5db" : "#6b7280" }}>Total Pending Credit</Text>
-          <Text style={{ fontSize: 18, fontWeight: "700", color: isDark ? "#fff" : "#111" }}>₹{totalPending.toLocaleString()}</Text>
+        <View style={{ padding: 16, borderRadius: 12, backgroundColor: "#fff" }}>
+          <Text>Pending</Text>
+          <Text>₹{totalPending}</Text>
 
-          <Text style={{ fontWeight: "600", color: isDark ? "#d1d5db" : "#6b7280", marginTop: 8 }}>Total Credit Taken</Text>
-          <Text style={{ fontSize: 18, fontWeight: "700", color: isDark ? "#fff" : "#111" }}>₹{totalCreditTaken.toLocaleString()}</Text>
+          <Text>Total Taken</Text>
+          <Text>₹{totalCreditTaken}</Text>
         </View>
 
-        {/* view transactions button */}
-        <Pressable
-          onPress={() => router.push({ pathname: "../transactions", params: { phone: customer.phone_number } })}
-          style={{ backgroundColor: "#2563eb", padding: 16, borderRadius: 12, alignItems: "center" }}
-        >
-          <Text style={{ color: "#fff", fontWeight: "700" }}>View Transactions</Text>
-        </Pressable>
-
-        {/* delete customer button */}
         <Pressable
           onPress={deleteCustomer}
-          style={{ backgroundColor: "#ef4444", padding: 16, borderRadius: 12, alignItems: "center", marginTop: 12 }}
+          style={{
+            backgroundColor: "#ef4444",
+            padding: 16,
+            borderRadius: 12,
+            alignItems: "center",
+          }}
         >
-          <Text style={{ color: "#fff", fontWeight: "700" }}>Delete Customer Data</Text>
+          <Text style={{ color: "#fff", fontWeight: "700" }}>
+            Delete Customer
+          </Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>
   );
 }
+
+
