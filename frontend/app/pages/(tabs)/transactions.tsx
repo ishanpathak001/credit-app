@@ -151,7 +151,11 @@ const Transactions = () => {
             </Text>
 
             <Text style={{ fontSize: 10, color: isDark ? '#9ca3af' : '#6b7280' }}>
-              {new Date(item.date).toLocaleString('en-IN')}
+              {new Date(item.date).toLocaleString('en-IN', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+              })}
             </Text>
 
             <Text style={{ fontSize: 10, fontWeight: '600', color: amountColor }}>

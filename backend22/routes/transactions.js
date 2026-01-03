@@ -119,4 +119,31 @@ router.get('/total-credit', authenticateToken, async (req, res) => {
   }
 });
 
+// GET /api/transactions/summary-last-week
+router.get('/summary-last-week', authenticateToken, async (req, res) => {
+  try {
+    const userId = req.userId;
+
+    const q = `
+      SELECT
+        TO_CHAR(c.created_at::date, 'Mon DD') AS day,
+        COALESCE(SUM(CASE WHEN status='settled' THEN amount END), 0) AS settled,
+        COALESCE(SUM(CASE WHEN status='pending' THEN amount END), 0) AS pending
+      FROM credits c
+      WHERE c.user_id = $1
+        AND c.created_at >= NOW() - INTERVAL '6 days'
+      GROUP BY day
+      ORDER BY MIN(c.created_at)
+    `;
+
+    const result = await pool.query(q, [userId]);
+
+    res.json({ data: result.rows });
+  } catch (err) {
+    console.error('Fetch last week summary error:', err);
+    res.status(500).json({ message: 'Server error', details: err.message });
+  }
+});
+
+
 module.exports = router;

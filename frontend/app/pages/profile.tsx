@@ -82,7 +82,7 @@ export default function ProfileScreen() {
           }}
         >
           <Text style={{ color: isDark ? '#9ca3af' : 'gray' }}>Total Credit Given (All Time)</Text>
-          <Text style={{ fontSize: 28, fontWeight: '700', marginTop: 8, color: '#d90606ff' }}>
+          <Text style={{ fontSize: 28, fontWeight: '700', marginTop: 8, color: '#2563eb' }}>
             ₹{totalCredit.toLocaleString()}
           </Text>
         </View>
